@@ -1,0 +1,109 @@
+{# Jinja2 macros for rendering tables in the project #}
+
+{% macro render_instance_table(instance, instance_type) %}
+<div class="instance-item d-flex justify-content-between align-items-center">
+  <div class="instance-name-container">
+    <span>{{ instance.name }}</span>
+    <div class="instance-actions">
+      <i class="fa fa-edit edit-instance-btn" data-instance-id="{{ instance.instance_id }}"
+        data-instance-type="{{ instance_type.lower() }}"
+        data-endpoint="/projects/instance/{{ instance.instance_id }}/details" title="Edit instance"></i>
+      <i class="fa fa-times delete-instance-btn" data-instance-id="{{ instance.instance_id }}"
+        data-instance-type="{{ instance_type.lower() }}" data-endpoint="/projects/delete_instance"
+        title="Delete instance"></i>
+    </div>
+  </div>
+  <div>
+    <span class="badge badge-info">{{ instance_type }}</span>
+    <button class="show-attributes-btn btn btn-sm btn-outline-info ml-2" data-instance-id="{{ instance.instance_id }}"
+      data-instance-type="{{ instance_type.lower() }}"
+      data-endpoint="/projects/instance/{{ instance.instance_id }}/attributes">
+      <i class="fa fa-table"></i> Hide
+    </button>
+  </div>
+</div>
+{% endmacro %}
+
+{% macro render_attributes_table(groups, instance_id, instance_type, is_linked=False) %}
+{% if groups %}
+<table class="attributes-table">
+  <thead>
+    <tr>
+      {# Show application column only for standalone accessories #}
+      {% if instance_type.lower() == 'accessory' and not is_linked %}
+      <th>Application</th>
+      {% endif %}
+      {% set attributes = groups[0].attributes %}
+      {% for attr in attributes %}
+      <th>{{ attr.name }}</th>
+      {% endfor %}
+    </tr>
+  </thead>
+  <tbody>
+    {% for group in groups %}
+    <tr class="{% if not loop.last %}group-separator{% endif %}">
+      {% if instance_type.lower() == 'accessory' and not is_linked %}
+      <td class="application-cell">
+        {{ group.application_name }}
+        {% if instance_id %}
+        <i class="fas fa-trash delete-attribute-row" data-instance-id="{{ instance_id }}"
+          data-instance-type="{{ instance_type }}" data-group-id="{{ group.group_id }}"
+          data-application="{{ group.application }}" data-endpoint="/projects/delete_attribute_row"
+          title="Delete this group"></i>
+        {% endif %}
+      </td>
+      {% endif %}
+      {% for attr in group.attributes %}
+      <td>{{ attr.value }}</td>
+      {% endfor %}
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endif %}
+{% endmacro %}
+
+{% macro render_linked_accessory(accessory, parent_item_id) %}
+<div class="linked-accessory mb-3">
+  <div class="d-flex justify-content-between align-items-center">
+    <div>
+      <span class="accessory-name">{{ accessory.name }}</span>
+      <span class="badge badge-secondary ml-2">{{ accessory.category_name or 'Unknown' }}</span>
+    </div>
+    <button class="btn btn-sm btn-outline-info show-accessory-attributes-btn"
+      data-instance-id="{{ accessory.instance_id }}" data-parent-item-id="{{ parent_item_id }}"
+      data-endpoint="/projects/instance/{{ accessory.instance_id }}/attributes">
+      <i class="fa fa-table"></i> Hide
+    </button>
+  </div>
+  <div class="accessory-attributes-container mt-2"></div>
+</div>
+{% endmacro %}
+
+{% macro instance_table_scripts() %}
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+{% endmacro %}
+
+{% macro instance_item_template() %}
+<div class="instance-item d-flex justify-content-between align-items-center">
+  <div class="instance-name-container">
+    <span>{{ instance.name }}</span>
+    <div class="instance-actions">
+      <i class="fa fa-edit edit-instance-btn" data-instance-id="{{ instance.instance_id }}"
+        data-instance-type="{{ instance_type }}" data-endpoint="/projects/instance/{{ instance.instance_id }}/details"
+        title="Edit instance"></i>
+      <i class="fa fa-times delete-instance-btn" data-instance-id="{{ instance.instance_id }}"
+        data-instance-type="{{ instance_type }}" data-endpoint="/projects/delete_instance" title="Delete instance"></i>
+    </div>
+  </div>
+  <div>
+    <span class="badge badge-info">{{ instance_type }}</span>
+    <button class="show-attributes-btn btn btn-sm btn-outline-info ml-2" data-instance-id="{{ instance.instance_id }}"
+      data-instance-type="{{ instance_type }}" data-endpoint="/projects/instance/{{ instance.instance_id }}/attributes">
+      <i class="fa fa-table"></i> Hide
+    </button>
+  </div>
+</div>
+{% endmacro %}
