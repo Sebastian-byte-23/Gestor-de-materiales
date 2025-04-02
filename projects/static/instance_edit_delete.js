@@ -169,7 +169,7 @@ $(document).on('click', '#confirmDeleteInstance', function() {
     // Send delete request
     $.ajax({
         url: '/projects/delete_instance',
-        type: 'POST',
+        type: 'DELETE',
         contentType: 'application/json',
         data: JSON.stringify({
             instance_id: instanceId,
@@ -212,7 +212,7 @@ $(document).on('click', '#confirmDeleteAttributeRow', function() {
     // Send delete request
     $.ajax({
         url: '/projects/delete_attribute_row',
-        type: 'POST',
+        type: 'DELETE',
         contentType: 'application/json',
         data: JSON.stringify({
             instance_id: instanceId,
