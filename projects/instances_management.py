@@ -7,10 +7,10 @@ from flask import session
 import pytz
 
 # Create the Blueprint object
-instances_bp = Blueprint("instances", __name__, url_prefix="/instances")
+instances_bp = Blueprint("instances", __name__, url_prefix="/projects/instances")
 
 
-def register_routes(projects_bp):
+def register_routes(app):
     @projects_bp.route("/create_instance", methods=["POST"])
     def create_instance():
         data = request.json
@@ -242,7 +242,7 @@ def log_operation(
     db.commit()
 
 
-    @projects_bp.route('/delete_instance', methods=['POST'])
+@instances_bp.route('/delete_instance', methods=['DELETE'])
     def delete_instance():
         data = request.json
         current_app.logger.debug(f"Delete instance  {data}")  # Log the incoming data
@@ -310,7 +310,7 @@ def log_operation(
             current_app.logger.error(f"Error during deletion: {e}")  # Log the error
             return jsonify({'success': False, 'error': str(e)})
 
-    @projects_bp.route('/delete_attribute_row', methods=['POST'])
+@instances_bp.route('/delete_attribute_row', methods=['DELETE'])
     def delete_attribute_row():
         data = request.json
         db = get_db()

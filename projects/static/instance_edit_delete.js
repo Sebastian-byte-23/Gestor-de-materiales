@@ -168,7 +168,7 @@ $(document).on('click', '#confirmDeleteInstance', function() {
     
     // Send delete request
     $.ajax({
-        url: '/instances/delete_instance',
+        url: '/projects/instances/delete_instance',
         type: 'DELETE',
         contentType: 'application/json',
         data: JSON.stringify({
@@ -211,7 +211,7 @@ $(document).on('click', '#confirmDeleteAttributeRow', function() {
     
     // Send delete request
     $.ajax({
-        url: '/instances/delete_attribute_row',
+        url: '/projects/instances/delete_attribute_row',
         type: 'DELETE',
         contentType: 'application/json',
         data: JSON.stringify({
