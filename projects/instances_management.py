@@ -55,11 +55,10 @@ def register_routes(projects_bp):
 
                 # Create attributes with application context and group_id
                 application = data.get("application", "")
-                # Always generate a new group ID for this set of attributes
-                # This ensures each set of attributes has a unique group_id
-                group_id = (
-                    data.get("group_id") if data.get("group_id") else str(uuid.uuid4())
-                )
+                # Use existing group_id or generate a simple one
+                group_id = data.get("group_id", f"group_{datetime.now().timestamp()}")
+                # Remove any 'new_group_' prefix if present
+                group_id = group_id.replace('new_group_', '')
 
                 for name, value in data["attributes"].items():
                     db.execute(

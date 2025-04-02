@@ -199,15 +199,13 @@ $(document).on('click', '#confirmDeleteAttributeRow', function() {
     // Validate required fields
     const instanceId = $('#deleteRowInstanceId').val();
     const instanceType = $('#deleteRowInstanceType').val();
+    const groupId = $('#deleteRowGroupId').val();
+    const application = $('#deleteRowApplication').val();
         
     if (!instanceId || !instanceType) {
         alert('Missing required instance information');
         return;
     }
-    const instanceId = $('#deleteRowInstanceId').val();
-    const instanceType = $('#deleteRowInstanceType').val();
-    const groupId = $('#deleteRowGroupId').val();
-    const application = $('#deleteRowApplication').val();
     
     // Send delete request
     $.ajax({
@@ -233,41 +231,20 @@ $(document).on('click', '#confirmDeleteAttributeRow', function() {
                     alert(successMsg);
                 }, 500);
                 
-                // Find the specific row to remove based on group_id or application+occurrence
-                if (groupId) {
-                    // If we have a group_id, use that to find the row
-                    $(`.delete-attribute-row[data-group-id="${groupId}"]`).closest('tr').fadeOut(300, function() {
-                        $(this).remove();
-                        
-                        // If no rows left, show "No attributes found" message
-                        const table = $(`.instance-item[data-instance-id="${instanceId}"]`)
-                            .closest('.instances-container')
-                            .find('.attributes-table');
-                            
-                        if (table.find('tbody tr').length === 0) {
-                            const container = table.parent();
-                            table.remove();
-                            container.html('<p class="text-muted">No attributes found</p>');
-                        }
-                    });
-                } else {
-                    // Otherwise use application and occurrence
-                    $(`.delete-attribute-row[data-instance-id="${instanceId}"][data-application="${application}"]`)
-                        .closest('tr').fadeOut(300, function() {
-                            $(this).remove();
-                            
-                            // If no rows left, show "No attributes found" message
-                            const table = $(`.instance-item[data-instance-id="${instanceId}"]`)
-                                .closest('.instances-container')
-                                .find('.attributes-table');
-                                
-                            if (table.find('tbody tr').length === 0) {
-                                const container = table.parent();
-                                table.remove();
-                                container.html('<p class="text-muted">No attributes found</p>');
-                            }
-                        });
-                }
+                // Find and remove the specific row
+                const rowSelector = groupId ? 
+                    `[data-group-id="${groupId}"]` : 
+                    `[data-application="${application}"]`;
+                
+                $(`.delete-attribute-row${rowSelector}`).closest('tr').fadeOut(300, function() {
+                    $(this).remove();
+                    
+                    // If no rows left, show "No attributes found" message
+                    const table = $(this).closest('table');
+                    if (table.find('tbody tr').length === 0) {
+                        table.replaceWith('<p class="text-muted">No attributes found</p>');
+                    }
+                });
             } else {
                 alert('Error deleting attribute row: ' + (response.error || 'Unknown error'));
             }
