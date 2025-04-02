@@ -10,9 +10,8 @@ import pytz
 instances_bp = Blueprint("instances", __name__, url_prefix="/projects/instances")
 
 
-def register_routes(app):
-    @projects_bp.route("/create_instance", methods=["POST"])
-    def create_instance():
+@instances_bp.route("/create_instance", methods=["POST"])
+def create_instance():
         data = request.json
         current_app.logger.debug(f"Create instance request data: {data}")
         db = get_db()
