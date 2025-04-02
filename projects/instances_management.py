@@ -103,7 +103,7 @@ def create_instance():
         db.rollback()
         return jsonify({'success': False, 'error': str(e)})
 
-@instances_bp.route('/delete_instance', methods=['POST'])
+@instances_bp.route('/delete_instance', methods=['DELETE'])
 def delete_instance():
     data = request.json
     current_app.logger.debug(f"Delete instance  {data}")  # Log the incoming data
@@ -171,7 +171,7 @@ def delete_instance():
         current_app.logger.error(f"Error during deletion: {e}")  # Log the error
         return jsonify({'success': False, 'error': str(e)})
 
-@instances_bp.route('/delete_attribute_row', methods=['POST'])
+@instances_bp.route('/delete_attribute_row', methods=['DELETE'])
 def delete_attribute_row():
     data = request.json
     db = get_db()
