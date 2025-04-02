@@ -37,6 +37,8 @@ $(document).ready(function() {
 });
 
 // Handle edit instance click (to be called from other files)
+
+
 function handleEditInstance(instanceId, instanceType, projectId) {
     // Reset the form
     $('#instanceForm')[0].reset();
