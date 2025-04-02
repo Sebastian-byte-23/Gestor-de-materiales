@@ -950,21 +950,44 @@ def create_pdf(project_id, output_path=None, report_type='full'):
 
                                 table_data.append(row)
 
-                        # Create the table
+                        # Create the table with column widths that fit the page
                         if len(table_data) > 1:  # Only create table if we have data rows
-                            consolidated_table = Table(table_data)
+                            # Calculate column widths - first column wider, others equal
+                            col_widths = [1.5*inch]  # Wider first column for "Aplicación"
+                            remaining_width = doc.width - 1.5*inch - 72  # Subtract margins
+                            if all_attr_names:
+                                col_widths.extend([remaining_width/len(all_attr_names)] * len(all_attr_names))
+                            
+                            consolidated_table = Table(table_data, colWidths=col_widths)
                             consolidated_table.setStyle(TableStyle([
                                 ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
                                 ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
                                 ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
                                 ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                                ('FONTSIZE', (0, 0), (-1, -1), 7),  # Smaller font size
                                 ('BOTTOMPADDING', (0, 0), (-1, 0), 0),
                                 ('GRID', (0, 0), (-1, -1), 1, colors.black),
                                 ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
                                 ('SPACEAFTER', (0, 0), (-1, -1), 0.1*inch),
+                                ('WORDWRAP', (0, 0), (-1, -1), True),  # Enable word wrap
                             ]))
-                            instance_flowables.append(consolidated_table)
-                            instance_flowables.append(Spacer(1, 0.1*inch))
+                            
+                            # Split table if too tall
+                            if len(table_data) > 15:  # If more than 15 rows
+                                split_tables = []
+                                for i in range(0, len(table_data), 15):
+                                    chunk = table_data[i:i+15]
+                                    if i > 0:  # Add header to subsequent chunks
+                                        chunk.insert(0, table_data[0])
+                                    split_tables.append(Table(chunk, colWidths=col_widths))
+                                
+                                for table in split_tables:
+                                    table.setStyle(consolidated_table.getStyle())
+                                    instance_flowables.append(table)
+                                    instance_flowables.append(Spacer(1, 0.1*inch))
+                            else:
+                                instance_flowables.append(consolidated_table)
+                                instance_flowables.append(Spacer(1, 0.1*inch))
 
                     # Add materials if present (skipped in commercial report)
                     if report_type != 'commercial' and instance.get('materials'):
