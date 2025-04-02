@@ -531,8 +531,8 @@
         function populateAttributeFields(attributes) {
             const container = $('#attributesContainer').empty();
 
-            // Generate a group ID for this set of attributes if it's an accessory
-            if ($('#itemType').val() === 'accessory') {
+            // Only generate a new group ID if it doesn't already exist
+            if ($('#itemType').val() === 'accessory' && !$('#attributeGroupId').length) {
                 const groupId = 'new_group_' + Date.now().toString();
 
                 // Add hidden group ID field
@@ -646,11 +646,11 @@
                 if (inputName.startsWith('attribute_')) {
                     // For item attributes or simple accessory attributes
                     name = inputName.replace('attribute_', '');
-                } else if (inputName !== 'group_id' && inputName !== 'application') {
-                    // Skip special fields and remove group prefix if present
-                    name = inputName.replace(/^new_group_\d+_/, '');
+                } else if (inputName === 'group_id' || inputName === 'application') {
+                    return; // Skip special fields
                 } else {
-                    return; // Skip this iteration for special fields
+                    // For accessory attributes, use the raw name without any processing
+                    name = inputName;
                 }
 
                 const value = input.val();
