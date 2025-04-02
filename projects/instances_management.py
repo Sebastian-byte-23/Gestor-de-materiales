@@ -242,7 +242,7 @@ def log_operation(
     db.commit()
 
 
-@instances_bp.route("/delete_instance", methods=["POST"])
+@instances_bp.route("/delete_instance", methods=["DELETE"])
 def delete_instance():
     data = request.json
     current_app.logger.debug(f"Delete instance request: {data}")
@@ -366,7 +366,7 @@ def delete_instance():
         return jsonify({"success": False, "error": str(e)})
 
 
-@instances_bp.route("/delete_attribute_row", methods=["POST"])
+@instances_bp.route("/delete_attribute_row", methods=["DELETE"])
 def delete_attribute_row():
     data = request.json
     current_app.logger.debug(f"Delete attribute request: {data}")
