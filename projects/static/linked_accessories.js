@@ -82,15 +82,19 @@ function showLinkedAccessoryModal(categoryId, categoryName, itemInstanceId) {
 function populateLinkedAccessoryAttributes(attributes) {
     const container = $('#attributesContainer').empty();
     
-    // Generate a group ID for this set of attributes
-    const groupId = 'new_group_' + Date.now().toString();
-    
-    // Add hidden group ID field
-    $('<input type="hidden">').attr({
-        id: 'attributeGroupId',
-        name: 'group_id',
-        value: groupId
-    }).appendTo(container);
+    // Only generate a new group ID if it doesn't already exist
+    let groupId;
+    if ($('#attributeGroupId').length) {
+        groupId = $('#attributeGroupId').val();
+    } else {
+        groupId = 'new_group_' + Date.now().toString();
+        // Add hidden group ID field
+        $('<input type="hidden">').attr({
+            id: 'attributeGroupId',
+            name: 'group_id',
+            value: groupId
+        }).appendTo(container);
+    }
     
     attributes.forEach(attr => {
         const div = $('<div class="form-group">').appendTo(container);
@@ -102,16 +106,14 @@ function populateLinkedAccessoryAttributes(attributes) {
         // If values array is empty or has only one empty value, use text input
         if (values.length === 0 || (values.length === 1 && values[0] === '')) {
             $('<input type="text" class="form-control">').attr({
-                name: `attribute_${attr.name}`,
-                required: true,
-                'data-group-id': groupId
+                name: attr.name,  // Usar el nombre directo del atributo
+                required: true
             }).appendTo(div);
         } else {
             // Otherwise use select dropdown
             const select = $('<select class="form-control">').attr({
-                name: `attribute_${attr.name}`,
-                required: true,
-                'data-group-id': groupId
+                name: attr.name,  // Usar el nombre directo del atributo
+                required: true
             }).appendTo(div);
             
             // Add options from the values array
