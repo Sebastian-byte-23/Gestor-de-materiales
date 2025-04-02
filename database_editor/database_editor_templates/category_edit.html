@@ -64,7 +64,7 @@ function updateLinkedCategoriesDisplay() {
         : '<em>No categories linked</em>';
 }
 
-function showEditModal(categoryId, name, parentId, linkedCategories='', itemType='item') {
+function showEditModal(categoryId, name, parentId, linkedCategories='', itemType='item', displayOrder=0) {
     const modal = document.getElementById('editCategoryModal');
     const form = document.getElementById('editForm');
     form.action = `/edit_category/${categoryId}`;
