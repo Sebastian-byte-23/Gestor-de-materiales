@@ -531,17 +531,7 @@
         function populateAttributeFields(attributes) {
             const container = $('#attributesContainer').empty();
 
-            // Only generate a new group ID if it doesn't already exist
-            if ($('#itemType').val() === 'accessory' && !$('#attributeGroupId').length) {
-                const groupId = 'new_group_' + Date.now().toString();
-
-                // Add hidden group ID field
-                $('<input type="hidden">').attr({
-                    id: 'attributeGroupId',
-                    name: 'group_id',
-                    value: groupId
-                }).appendTo(container);
-            }
+            // Group ID will be handled in populateAttributeFields
 
             attributes.forEach(attr => {
                 const div = $('<div class="form-group">').appendTo(container);

@@ -109,11 +109,11 @@ window.tableLogic = (function() {
                             }
                             attributesByGroup[groupKey].attributes[attr.name] = attr.value;
                         } else {
-                            // Existing accessory grouping logic
-                            const groupKey = attr.group_id || `no_group_${Math.random().toString(36).substr(2, 9)}`;
+                            // For accessories, use the group_id from the attribute or create a default one
+                            const groupKey = attr.group_id || 'default_group';
                             if (!attributesByGroup[groupKey]) {
                                 attributesByGroup[groupKey] = {
-                                    group_id: attr.group_id,
+                                    group_id: attr.group_id || 'default_group',
                                     application: attr.application || 'General',
                                     occurrence: attr.occurrence || 1,
                                     application_name: attr.application_name || attr.application || 'General',

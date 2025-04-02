@@ -82,18 +82,16 @@ function showLinkedAccessoryModal(categoryId, categoryName, itemInstanceId) {
 function populateLinkedAccessoryAttributes(attributes) {
     const container = $('#attributesContainer').empty();
     
-    // Only generate a new group ID if it doesn't already exist
-    let groupId;
-    if ($('#attributeGroupId').length) {
-        groupId = $('#attributeGroupId').val();
-    } else {
+    // Use existing group ID or generate a new one only if this is the first attribute set
+    let groupId = $('#attributeGroupId').val();
+    if (!groupId) {
         groupId = 'new_group_' + Date.now().toString();
-        // Add hidden group ID field
+        // Add hidden group ID field only once
         $('<input type="hidden">').attr({
             id: 'attributeGroupId',
             name: 'group_id',
             value: groupId
-        }).appendTo(container);
+        }).appendTo('#instanceForm'); // Append to form instead of container
     }
     
     attributes.forEach(attr => {
