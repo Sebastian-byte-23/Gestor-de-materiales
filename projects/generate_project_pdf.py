@@ -66,6 +66,7 @@ class NumberedCanvas(canvas.Canvas):
         canvas.Canvas.save(self)
 
     def draw_page_number(self, page_count):
+        import os # Asegura que 'os' esté disponible en este ámbito local
         self.setFont("Helvetica", 8)
         page_width, page_height = self._pagesize
 
