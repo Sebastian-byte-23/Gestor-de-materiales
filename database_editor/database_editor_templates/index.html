@@ -166,18 +166,43 @@
             cursor: pointer;
             font-size: 28px;
         }
+        /* Styles for drag and drop */
+        .category-item {
+            cursor: move; /* Indicate draggable items */
+            background-color: #f9f9f9; /* Slightly different background for items */
+            border: 1px solid #eee;
+            margin-bottom: 5px;
+        }
+        .category-container {
+            min-height: 20px; /* Ensure drop zones are visible */
+            /* border: 1px dashed #ccc; /* Optional: visualize drop zones */
+            padding: 5px;
+        }
+        .sortable-ghost {
+            opacity: 0.4;
+            background-color: #add8e6; /* Light blue ghost */
+        }
+        .sortable-drag {
+            opacity: 0.9;
+        }
+
     </style>
+    <!-- Include SortableJS library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
 </head>
 <body>
-    <h1></h1>
+    <h1>Category Editor</h1>
     
     <a href="/" style="text-decoration: none;"><button class="add-button">Back to Home</button></a>
-    <button class="add-button" onclick="showAddModal(null)">+</button>
+    <button class="add-button" onclick="showAddModal(null)">+ Add Root Category</button>
 
-    <div class="category-list">
+    <div id="root-categories" class="category-list category-container">
         {% macro render_category(category) %}
-            <div class="category-item">
+            {# Add data-category-id to the main item div #}
+            <div class="category-item" data-category-id="{{ category.category_id }}">
                 <div class="category-header">
+                    {# Display order for debugging/verification #}
+                    {# <span style="font-size: 0.7em; color: grey; margin-right: 5px;">({{ category.display_order }})</span> #}
                     <span class="category-name">{{ category.name }}</span>
                     <div class="category-buttons">
                         <button class="add-button" onclick="showAddModal({{ category.category_id }})">+ Subcategory</button>
@@ -187,23 +212,31 @@
                     </div>
                 </div>
                 {% set category_items = get_items_by_category(category.category_id) %}
+                {% set category_items = get_items_by_category(category.category_id) %}
                 {% set category_accessories = get_accessories_by_category(category.category_id) %}
                 {{ render_items(category_items, category_accessories) }}
+
+                {# Wrap children in a container div for SortableJS #}
+                {% if category.children %}
+                    <div class="child-category category-container" data-parent-id="{{ category.category_id }}">
+                        {% for child in category.children %}
+                            {{ render_category(child) }}
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    {# Add an empty container for dropping children into categories that currently have none #}
+                     <div class="child-category category-container" data-parent-id="{{ category.category_id }}" style="min-height: 10px; margin-left: 20px;"></div>
+                {% endif %}
             </div>
-            {% if category.children %}
-                <div class="child-category">
-                    {% for child in category.children %}
-                        {{ render_category(child) }}
-                    {% endfor %}
-                </div>
-            {% endif %}
         {% endmacro %}
 
+        {# Render root categories #}
         {% for category in categories %}
             {{ render_category(category) }}
         {% endfor %}
     </div>
 
+    {# Add Category Modal (ensure it has display_order field) #}
     <div id="addCategoryModal" class="modal">
         <div class="modal-content">
             <span class="close" onclick="hideAddModal()">&times;</span>
@@ -304,7 +337,71 @@
                 hideEditModal();
             }
         }
-        // Item management functions
+
+        // --- Drag and Drop Initialization ---
+        document.addEventListener('DOMContentLoaded', function () {
+            const categoryContainers = document.querySelectorAll('.category-container');
+
+            categoryContainers.forEach(container => {
+                new Sortable(container, {
+                    group: 'categories', // Allow dragging between containers
+                    animation: 150,
+                    ghostClass: 'sortable-ghost', // Class for the drop placeholder
+                    dragClass: 'sortable-drag', // Class for the item being dragged
+                    onEnd: function (evt) {
+                        const itemEl = evt.item; // Dragged element
+                        const categoryId = itemEl.dataset.categoryId;
+                        const newParentEl = evt.to; // Target container element
+                        const newParentId = newParentEl.dataset.parentId || null; // Get parent ID or null for root
+                        const newIndex = evt.newIndex; // Index within the new parent
+
+                        // Get all category IDs in the new parent container in their new order
+                        const siblingIds = Array.from(newParentEl.children)
+                                                .map(child => child.dataset.categoryId)
+                                                .filter(id => id); // Filter out undefined/null if any non-category items exist
+
+                        console.log(`Moved Category ID: ${categoryId}`);
+                        console.log(`New Parent ID: ${newParentId}`);
+                        console.log(`New Index: ${newIndex}`);
+                        console.log(`New Sibling Order: ${siblingIds.join(', ')}`);
+
+                        // Send update to the backend
+                        fetch('/update_category_order', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                category_id: categoryId,
+                                new_parent_id: newParentId,
+                                sibling_ids: siblingIds // Send the full ordered list of siblings
+                            })
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                console.log('Category order updated successfully.');
+                                // Optional: Provide visual feedback instead of reloading
+                                // For simplicity, we reload to see the changes reflected from the server
+                                // location.reload();
+                            } else {
+                                console.error('Error updating category order:', data.message);
+                                alert('Error updating category order: ' + data.message);
+                                // Optionally revert the change visually if the backend fails
+                                location.reload(); // Reload to revert visual change on error
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Network error:', error);
+                            alert('Network error while updating category order.');
+                            location.reload(); // Reload to revert visual change on error
+                        });
+                    }
+                });
+            });
+        });
+
+        // --- Item management functions ---
         let currentCategoryId;
         let currentCategoryItemType;
         

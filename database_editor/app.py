@@ -219,6 +219,30 @@ def edit_category_route(category_id):
     return redirect(url_for("database_editor"))
 
 
+@app.route("/update_category_order", methods=["POST"])
+def update_category_order_route():
+    data = request.json
+    category_id = data.get("category_id")
+    new_parent_id = data.get("new_parent_id")
+    sibling_ids = data.get("sibling_ids") # List of category IDs in the new order
+
+    if not category_id or sibling_ids is None:
+        return jsonify({"success": False, "message": "Missing data"}), 400
+
+    try:
+        # Import the function to update order
+        from database_editor.categories import update_category_order
+        success, message = update_category_order(category_id, new_parent_id, sibling_ids)
+        if success:
+            return jsonify({"success": True})
+        else:
+            return jsonify({"success": False, "message": message}), 500
+    except Exception as e:
+        # Log the exception e
+        print(f"Error updating category order: {e}")
+        return jsonify({"success": False, "message": str(e)}), 500
+
+
 @app.route("/delete_category/<int:category_id>", methods=["POST"])
 def delete_category_route(category_id):
     delete_category(category_id)

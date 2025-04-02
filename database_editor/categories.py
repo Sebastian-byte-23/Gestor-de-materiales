@@ -82,6 +82,62 @@ def edit_category(category_id, name, parent_id, linked_categories, item_type='it
         )
         conn.commit()
 
+def update_category_order(category_id_to_move, new_parent_id, sibling_ids):
+    """
+    Updates the parent_id and display_order for a category based on drag-and-drop.
+
+    Args:
+        category_id_to_move (int): The ID of the category that was moved.
+        new_parent_id (int or None): The ID of the new parent category, or None if moved to root.
+        sibling_ids (list): A list of category IDs in their new order within the parent.
+    """
+    try:
+        with get_db() as conn:
+            cursor = conn.cursor()
+            # Ensure IDs are integers
+            category_id_to_move = int(category_id_to_move)
+            new_parent_id = int(new_parent_id) if new_parent_id is not None else None
+            sibling_ids = [int(id) for id in sibling_ids]
+
+            # Start transaction
+            conn.execute("BEGIN TRANSACTION;")
+
+            # Update parent_id and display_order for all siblings in the list
+            for index, sibling_id in enumerate(sibling_ids):
+                # The category being moved might change its parent
+                current_parent_id = new_parent_id if sibling_id == category_id_to_move else None
+
+                # Update display_order based on index
+                cursor.execute(
+                    """
+                    UPDATE Categories
+                    SET display_order = ?
+                    WHERE category_id = ?
+                    """,
+                    (index, sibling_id)
+                )
+                # If this is the category being moved, also update its parent_id
+                if sibling_id == category_id_to_move:
+                     cursor.execute(
+                        """
+                        UPDATE Categories
+                        SET parent_id = ?
+                        WHERE category_id = ?
+                        """,
+                        (new_parent_id, sibling_id)
+                    )
+
+            # Commit transaction
+            conn.commit()
+            return True, "Order updated successfully"
+    except Exception as e:
+        # Rollback on error
+        if conn:
+            conn.rollback()
+        print(f"Error in update_category_order: {e}")
+        return False, str(e)
+
+
 def delete_category(category_id):
     with get_db() as conn:
         cursor = conn.cursor()
