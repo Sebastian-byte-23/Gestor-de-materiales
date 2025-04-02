@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Category Management</title>
+    {% include 'item_modals.html' %}
+    {% include 'edit_item_modal.html' %}
+    {% from 'item_list.html' import render_items %}
+    <style>
+        .category-list {
+            margin: 20px;
+        }
+        .edit-button, .delete-button, .add-item-button, .add-button {
+            margin-left: 5px;
+            padding: 5px 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s ease;
+        }
+        .edit-button {
+            background-color: #4CAF50; /* Green */
+            color: white;
+        }
+        .edit-button:hover {
+            background-color: #367c39;
+        }
+        .delete-button {
+            background-color: #f44336; /* Red */
+            color: white;
+        }
+        .delete-button:hover {
+            background-color: #d32f2f;
+        }
+        .add-item-button {
+            background-color: #ff9800; /* Orange */
+            color: white;
+        }
+        .add-item-button:hover {
+            background-color: #f57c00;
+        }
+        .add-button {
+            background-color: #2196F3; /* Blue */
+            color: white;
+        }
+        .add-button:hover {
+            background-color: #1976D2;
+        }
+        .category-item {
+            margin: 5px 0; /* Reduced margin */
+            padding: 8px; /* Added padding */
+            border-bottom: 1px solid #eee; /* Added subtle border */
+        }
+        .category-header {
+            display: flex;
+            align-items: center;
+            position: relative;
+        }
+        .category-buttons {
+            display: inline-flex; /* Changed to inline-flex */
+            margin-left: 10px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .category-header:hover .category-buttons {
+            opacity: 1;
+        }
+        .category-name {
+            /* Removed flex-grow */
+        }
+        .child-category {
+            margin-left: 20px;
+        }
+        .items-list {
+            margin: 10px 0 10px 20px;
+        }
+        .item-name {
+            cursor: pointer;
+            color: #2196F3;
+        }
+        .item-name:hover {
+            text-decoration: underline;
+        }
+        .add-button {
+            margin-left: 10px;
+            padding: 2px 8px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .add-button:hover {
+            background-color: #45a049;
+        }
+        .add-item-button {
+            margin-left: 10px;
+            padding: 2px 8px;
+            background-color: #ff9800;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .add-item-button:hover {
+            background-color: #f57c00;
+        }
+        .items-container {
+            margin-left: 20px;
+            margin-top: 10px;
+        }
+        .item-entry {
+            margin: 5px 0;
+            padding: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .item-entry button {
+            padding: 2px 8px;
+            background-color: #2196F3;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        .attribute-field {
+            margin: 10px 0;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .attribute-field input {
+            margin-right: 10px;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-content {
+            background-color: white;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%; /* Wider modal */
+            max-width: 1200px; /* Maximum width */
+            max-height: 90vh; /* Maximum height */
+            overflow-y: auto; /* Allow scrolling if content is too tall */
+        }
+        .close {
+            float: right;
+            cursor: pointer;
+            font-size: 28px;
+        }
+    </style>
+</head>
+<body>
+    <h1></h1>
+    
+    <a href="/" style="text-decoration: none;"><button class="add-button">Back to Home</button></a>
+    <button class="add-button" onclick="showAddModal(null)">+</button>
+
+    <div class="category-list">
+        {% macro render_category(category) %}
+            <div class="category-item">
+                <div class="category-header">
+                    <span class="category-name">{{ category.name }}</span>
+                    <div class="category-buttons">
+                        <button class="add-button" onclick="showAddModal({{ category.category_id }})">+ Subcategory</button>
+                        <button class="add-item-button" onclick="showItemTypeModal({{ category.category_id }}, '{{ category.item_type }}')">+ Item</button>
+                        <button class="edit-button" onclick="showEditModal({{ category.category_id }}, '{{ category.name }}', {{ category.parent_id or 'null' }}, '{{ category.linked_categories or '' }}', '{{ category.item_type or 'item' }}')">Edit</button>
+                        <button class="delete-button" onclick="deleteCategory({{ category.category_id }})">Delete</button>
+                    </div>
+                </div>
+                {% set category_items = get_items_by_category(category.category_id) %}
+                {% set category_accessories = get_accessories_by_category(category.category_id) %}
+                {{ render_items(category_items, category_accessories) }}
+            </div>
+            {% if category.children %}
+                <div class="child-category">
+                    {% for child in category.children %}
+                        {{ render_category(child) }}
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endmacro %}
+
+        {% for category in categories %}
+            {{ render_category(category) }}
+        {% endfor %}
+    </div>
+
+    <div id="addCategoryModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="hideAddModal()">&times;</span>
+            <h2>Add New Category</h2>
+            <form action="{{ url_for('add_category_route') }}" method="POST">
+                <input type="hidden" id="add_parent_id" name="parent_id" value="">
+                <div>
+                    <label for="add_name">Category Name:</label>
+                    <input type="text" id="add_name" name="name" required>
+                </div>
+                <div>
+                    <label>Item Type:</label>
+                    <div>
+                        <input type="radio" id="add_item_type_item" name="item_type" value="item" checked>
+                        <label for="add_item_type_item">Regular Item</label>
+                    </div>
+                    <div>
+                        <input type="radio" id="add_item_type_accessory" name="item_type" value="accessory">
+                        <label for="add_item_type_accessory">Accessory Item</label>
+                    </div>
+                    <div>
+                        <input type="radio" id="add_item_type_window" name="item_type" value="window">
+                        <label for="add_item_type_window">Window</label>
+                    </div>
+                </div>
+                <button type="submit">Add Category</button>
+            </form>
+        </div>
+    </div>
+
+    {% include 'category_edit.html' %}
+
+    <script>
+        function showAddModal(parentId) {
+            const modal = document.getElementById('addCategoryModal');
+            modal.classList.add('show');
+            document.getElementById('add_parent_id').value = parentId || '';
+        }
+
+        function hideAddModal() {
+            const modal = document.getElementById('addCategoryModal');
+            modal.classList.remove('show');
+        }
+
+
+        function deleteCategory(categoryId) {
+            if (confirm('Are you sure you want to delete this category?')) {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = `/delete_category/${categoryId}`;
+                document.body.appendChild(form);
+                form.submit();
+            }
+        }
+
+        // Close modals when clicking outside
+        window.onclick = function(event) {
+            const addModal = document.getElementById('addCategoryModal');
+            const editModal = document.getElementById('editCategoryModal');
+            if (event.target == addModal) {
+                hideAddModal();
+            }
+            if (event.target == editModal) {
+                hideEditModal();
+            }
+        }
+        // Item management functions
+        let currentCategoryId;
+        let currentCategoryItemType;
+        
+        function showItemTypeModal(categoryId, itemType) {
+            currentCategoryId = categoryId;
+
+            // If window is selected, redirect to window designer page
+            if (itemType === 'window') {
+                window.location.href = `/window_designer/${categoryId}`;
+                return;
+            }
+            
+            document.getElementById('item_type').value = itemType;
+            document.getElementById('item_category_id').value = categoryId;
+            
+            // Always show installation field
+            document.getElementById('installation_field').style.display = 'block';
+            
+            document.getElementById('itemFormTitle').textContent = 
+                `Add New ${itemType === 'item' ? 'Item' : 'Accessory'}`;
+            
+            document.getElementById('itemFormModal').classList.add('show');
+        }
+
+        function hideItemFormModal() {
+            document.getElementById('itemFormModal').classList.remove('show');
+            document.getElementById('attributes_container').innerHTML = '';
+        }
+
+        function addAttributeField() {
+            const container = document.getElementById('attributes_container');
+            const attributeDiv = document.createElement('div');
+            attributeDiv.className = 'attribute-field';
+            attributeDiv.innerHTML = `
+                <input type="text" placeholder="Attribute Name" required>
+                <div class="values-container">
+                    <div class="value-entry">
+                        <input type="text" placeholder="Value" required>
+                        <button type="button" onclick="this.parentElement.remove()">×</button>
+                    </div>
+                </div>
+                <button type="button" onclick="addValueField(this.parentElement)">Add Value</button>
+                <button type="button" onclick="this.parentElement.remove()">Remove Attribute</button>
+            `;
+            container.appendChild(attributeDiv);
+        }
+
+        function addValueField(attributeDiv) {
+            const container = attributeDiv.querySelector('.values-container');
+            const valueDiv = document.createElement('div');
+            valueDiv.className = 'value-entry';
+            valueDiv.innerHTML = `
+                <input type="text" placeholder="Value" required>
+                <button type="button" onclick="this.parentElement.remove()">×</button>
+            `;
+            container.appendChild(valueDiv);
+        }
+
+        async function submitItemForm(event) {
+            event.preventDefault();
+            const form = event.target;
+            
+            // Collect attributes
+            const attributes = [];
+            document.querySelectorAll('#attributes_container .attribute-field').forEach(field => {
+                const nameInput = field.querySelector('input');
+                const valueInputs = field.querySelectorAll('.value-entry input');
+                attributes.push({
+                    name: nameInput.value,
+                    value: Array.from(valueInputs).map(input => input.value)
+                });
+            });
+            
+            const data = {
+                type: form.type.value,
+                category_id: form.category_id.value,
+                name: form.name.value,
+                short_name: form.short_name.value,
+                description: form.description.value,
+                short_description: form.short_description.value,
+                installation: form.type.value === 'item' ? form.installation.value : null,
+                attributes: attributes
+            };
+            
+            try {
+                const response = await fetch('/add_item', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                if (response.ok) {
+                    hideItemFormModal();
+                    location.reload();
+                } else {
+                    alert('Error adding item');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error adding item');
+            }
+        }
+    </script>
+</body>
+</html>

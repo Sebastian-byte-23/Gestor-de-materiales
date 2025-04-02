@@ -1,0 +1,174 @@
+<div id="editCategoryModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="hideEditModal()">&times;</span>
+        <h2>Edit Category</h2>
+        <form id="editForm" method="POST">
+            <input type="hidden" id="edit_parent_id" name="parent_id" value="">
+            <div>
+                <label for="edit_name">Category Name:</label>
+                <input type="text" id="edit_name" name="name" required>
+            </div>
+            <div>
+                <label for="edit_linked_categories">Linked Categories:</label>
+                <input type="hidden" id="edit_linked_categories" name="linked_categories">
+                <div id="linked_categories_display" style="margin: 5px 0; padding: 5px; border: 1px solid #ddd;"></div>
+                <button type="button" onclick="showLinkCategoriesModal()">Select Categories</button>
+            </div>
+            <div>
+                <label>Item Type:</label>
+                <div>
+                    <input type="radio" id="edit_item_type_item" name="item_type" value="item">
+                    <label for="edit_item_type_item">Regular Item</label>
+                </div>
+                <div>
+                    <input type="radio" id="edit_item_type_accessory" name="item_type" value="accessory">
+                    <label for="edit_item_type_accessory">Accessory Item</label>
+                </div>
+                <div>
+                    <input type="radio" id="edit_item_type_window" name="item_type" value="window">
+                    <label for="edit_item_type_window">Window</label>
+                </div>
+            </div>
+            <button type="submit">Save Changes</button>
+        </form>
+    </div>
+</div>
+
+<div id="linkCategoriesModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="hideLinkCategoriesModal()">&times;</span>
+        <h2>Select Linked Categories</h2>
+        <div id="categoriesTree"></div>
+        <button onclick="saveLinkCategories()">Save Selection</button>
+    </div>
+</div>
+
+<script>
+let selectedCategories = new Set();
+let allCategories = [];
+let categoryNameMap = {};
+
+function getCategoryName(categoryId) {
+    return categoryNameMap[categoryId] || categoryId;
+}
+
+function updateLinkedCategoriesDisplay() {
+    const display = document.getElementById('linked_categories_display');
+    const linkedCategories = Array.from(selectedCategories);
+    display.innerHTML = linkedCategories.length > 0 
+        ? linkedCategories.map(id => getCategoryName(id)).join(', ')
+        : '<em>No categories linked</em>';
+}
+
+function showEditModal(categoryId, name, parentId, linkedCategories='', itemType='item') {
+    const modal = document.getElementById('editCategoryModal');
+    const form = document.getElementById('editForm');
+    form.action = `/edit_category/${categoryId}`;
+    document.getElementById('edit_name').value = name;
+    document.getElementById('edit_parent_id').value = parentId || '';
+    const linkedCategoryIds = linkedCategories.split(',').filter(x => x);
+    document.getElementById('edit_linked_categories').value = linkedCategories;
+    selectedCategories = new Set(linkedCategoryIds);
+    updateLinkedCategoriesDisplay();
+    
+    // Set the item type radio button
+    if (itemType === 'accessory') {
+        document.getElementById('edit_item_type_accessory').checked = true;
+    } else {
+        document.getElementById('edit_item_type_item').checked = true;
+    }
+    
+    modal.style.display = 'block';
+}
+
+function hideEditModal() {
+    document.getElementById('editCategoryModal').style.display = 'none';
+}
+
+function showLinkCategoriesModal() {
+    const modal = document.getElementById('linkCategoriesModal');
+    modal.style.display = 'block';
+    
+    // Fetch categories if we haven't already
+    if (allCategories.length === 0) {
+        fetch('/get_categories')
+            .then(response => response.json())
+            .then(categories => {
+                allCategories = categories;
+                // Build category name map
+                function mapCategories(cats) {
+                    cats.forEach(cat => {
+                        categoryNameMap[cat.category_id] = cat.name;
+                        if (cat.children) {
+                            mapCategories(cat.children);
+                        }
+                    });
+                }
+                mapCategories(categories);
+                renderCategoriesTree();
+            });
+    } else {
+        renderCategoriesTree();
+    }
+}
+
+function hideLinkCategoriesModal() {
+    document.getElementById('linkCategoriesModal').style.display = 'none';
+}
+
+function renderCategoriesTree() {
+    const container = document.getElementById('categoriesTree');
+    container.innerHTML = '';
+    
+    function renderCategory(category) {
+        const div = document.createElement('div');
+        div.style.marginLeft = '20px';
+        
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.value = category.category_id;
+        checkbox.checked = selectedCategories.has(category.category_id.toString());
+        checkbox.onchange = (e) => {
+            if (e.target.checked) {
+                selectedCategories.add(e.target.value);
+            } else {
+                selectedCategories.delete(e.target.value);
+            }
+        };
+        
+        div.appendChild(checkbox);
+        div.appendChild(document.createTextNode(category.name));
+        
+        if (category.children) {
+            category.children.forEach(child => {
+                div.appendChild(renderCategory(child));
+            });
+        }
+        
+        return div;
+    }
+    
+    allCategories.forEach(category => {
+        container.appendChild(renderCategory(category));
+    });
+}
+
+function saveLinkCategories() {
+    const selectedIds = Array.from(selectedCategories);
+    document.getElementById('edit_linked_categories').value = selectedIds.join(',');
+    updateLinkedCategoriesDisplay();
+    hideLinkCategoriesModal();
+}
+
+// Close modals when clicking outside
+window.onclick = function(event) {
+    const editModal = document.getElementById('editCategoryModal');
+    const linkModal = document.getElementById('linkCategoriesModal');
+    if (event.target == editModal) {
+        hideEditModal();
+    }
+    if (event.target == linkModal) {
+        hideLinkCategoriesModal();
+    }
+}
+</script>
