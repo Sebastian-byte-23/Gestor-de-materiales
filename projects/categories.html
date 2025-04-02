@@ -647,8 +647,8 @@
                     // For item attributes or simple accessory attributes
                     name = inputName.replace('attribute_', '');
                 } else if (inputName !== 'group_id' && inputName !== 'application') {
-                    // Skip special fields
-                    name = inputName;
+                    // Skip special fields and remove group prefix if present
+                    name = inputName.replace(/^new_group_\d+_/, '');
                 } else {
                     return; // Skip this iteration for special fields
                 }
