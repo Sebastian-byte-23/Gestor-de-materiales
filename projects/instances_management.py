@@ -378,6 +378,16 @@ def delete_attribute_row():
 
         elif data.get("group_id"):
             current_app.logger.debug(f"Deleting by group_id: {data['group_id']}")
+            
+            # Verificar si la instancia existe primero
+            instance_exists = db.execute(
+                "SELECT 1 FROM Accessory_Instance WHERE accessory_instance_id = ?",
+                (data["instance_id"],)
+            ).fetchone()
+            
+            if not instance_exists:
+                return jsonify({"success": False, "error": "Accessory instance not found"})
+
             # Verificar si existen atributos con este group_id
             exists = db.execute(
                 "SELECT 1 FROM Accessory_Instance_Attributes WHERE accessory_instance_id = ? AND group_id = ?",
@@ -385,32 +395,58 @@ def delete_attribute_row():
             ).fetchone()
             
             if not exists:
-                return jsonify({"success": False, "error": "Attribute group not found"})
+                return jsonify({"success": False, "error": "No attributes found with this group_id"})
 
-            db.execute(
+            # Eliminar los atributos
+            result = db.execute(
                 "DELETE FROM Accessory_Instance_Attributes WHERE accessory_instance_id = ? AND group_id = ?",
                 (data["instance_id"], data["group_id"])
             )
+            
+            if result.rowcount == 0:
+                return jsonify({"success": False, "error": "No rows were deleted"})
 
         elif data.get("application"):
-            print("Eliminando por application:", data["application"])
-            db.execute(
-                """
-                DELETE FROM Accessory_Instance_Attributes 
-                WHERE accessory_instance_id = ? AND application = ?
-            """,
-                (data["instance_id"], data["application"]),
+            current_app.logger.debug(f"Deleting by application: {data['application']}")
+            
+            # Verificar si la instancia existe
+            instance_exists = db.execute(
+                "SELECT 1 FROM Accessory_Instance WHERE accessory_instance_id = ?",
+                (data["instance_id"],)
+            ).fetchone()
+            
+            if not instance_exists:
+                return jsonify({"success": False, "error": "Accessory instance not found"})
+
+            # Eliminar atributos por aplicación
+            result = db.execute(
+                "DELETE FROM Accessory_Instance_Attributes WHERE accessory_instance_id = ? AND application = ?",
+                (data["instance_id"], data["application"])
             )
+            
+            if result.rowcount == 0:
+                return jsonify({"success": False, "error": "No attributes found for this application"})
 
         else:
-            print("Eliminando sin application (vacía o NULL)")
-            db.execute(
-                """
-                DELETE FROM Accessory_Instance_Attributes 
-                WHERE accessory_instance_id = ? AND (application IS NULL OR application = '')
-            """,
-                (data["instance_id"],),
+            current_app.logger.debug("Deleting attributes with empty/NULL application")
+            
+            # Verificar si la instancia existe
+            instance_exists = db.execute(
+                "SELECT 1 FROM Accessory_Instance WHERE accessory_instance_id = ?",
+                (data["instance_id"],)
+            ).fetchone()
+            
+            if not instance_exists:
+                return jsonify({"success": False, "error": "Accessory instance not found"})
+
+            # Eliminar atributos sin aplicación
+            result = db.execute(
+                "DELETE FROM Accessory_Instance_Attributes WHERE accessory_instance_id = ? AND (application IS NULL OR application = '')",
+                (data["instance_id"],)
             )
+            
+            if result.rowcount == 0:
+                return jsonify({"success": False, "error": "No attributes with empty application found"})
 
         db.commit()
         print("Commit hecho")
