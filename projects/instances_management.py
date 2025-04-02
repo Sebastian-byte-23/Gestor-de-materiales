@@ -449,12 +449,24 @@ def delete_attribute_row():
                 return jsonify({"success": False, "error": "No attributes with empty application found"})
 
         db.commit()
-        print("Commit hecho")
-        return jsonify({"success": True})
+        current_app.logger.debug("Attribute deletion successful")
+        return jsonify({
+            "success": True,
+            "deleted_count": result.rowcount,
+            "instance_id": data["instance_id"],
+            "group_id": data.get("group_id"),
+            "application": data.get("application")
+        })
 
     except Exception as e:
         db.rollback()
-        print("ERROR:", str(e))
+        current_app.logger.error(f"Error deleting attributes: {str(e)}")
+        current_app.logger.error(f"Request data: {data}")
+        return jsonify({
+            "success": False,
+            "error": str(e),
+            "request_data": data
+        }), 500
         return jsonify({"success": False, "error": str(e)})
 
 

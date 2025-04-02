@@ -194,8 +194,16 @@ $(document).on('click', '#confirmDeleteInstance', function() {
     });
 });
 
-// Handle delete attribute row confirmation
+// Handle delete attribute row confirmation with better validation
 $(document).on('click', '#confirmDeleteAttributeRow', function() {
+    // Validate required fields
+    const instanceId = $('#deleteRowInstanceId').val();
+    const instanceType = $('#deleteRowInstanceType').val();
+        
+    if (!instanceId || !instanceType) {
+        alert('Missing required instance information');
+        return;
+    }
     const instanceId = $('#deleteRowInstanceId').val();
     const instanceType = $('#deleteRowInstanceType').val();
     const groupId = $('#deleteRowGroupId').val();
@@ -214,8 +222,16 @@ $(document).on('click', '#confirmDeleteAttributeRow', function() {
         }),
         success: function(response) {
             if (response.success) {
-                // Close the modal
-                $('#deleteAttributeRowModal').modal('hide');
+                // Show success feedback
+                const successMsg = response.deleted_count > 0 
+                    ? `Deleted ${response.deleted_count} attributes successfully`
+                    : 'No attributes found to delete';
+                    
+                // Close modal after brief delay
+                setTimeout(() => {
+                    $('#deleteAttributeRowModal').modal('hide');
+                    alert(successMsg);
+                }, 500);
                 
                 // Find the specific row to remove based on group_id or application+occurrence
                 if (groupId) {
@@ -257,7 +273,18 @@ $(document).on('click', '#confirmDeleteAttributeRow', function() {
             }
         },
         error: function(xhr, status, error) {
-            alert('Error deleting attribute row: ' + error);
+            let errorMsg = 'Error deleting attribute row: ';
+            if (xhr.responseJSON && xhr.responseJSON.error) {
+                errorMsg += xhr.responseJSON.error;
+            } else {
+                errorMsg += error;
+            }
+            alert(errorMsg);
+            
+            // Cerrar el modal solo si fue un error de validación
+            if (xhr.status !== 404) {
+                $('#deleteAttributeRowModal').modal('hide');
+            }
         }
     });
 });
