@@ -47,8 +47,10 @@
         {{ group.application_name }}
         {% if instance_id %}
         <i class="fas fa-trash delete-attribute-row" data-instance-id="{{ instance_id }}"
-          data-instance-type="{{ instance_type }}" data-group-id="{{ group.group_id }}"
-          data-application="{{ group.application }}" data-endpoint="/projects/delete_attribute_row"
+          data-instance-type="{{ instance_type }}" 
+          data-group-id="{{ group.group_id.replace('new_group_', '') if group.group_id else '' }}"
+          data-application="{{ group.application }}" 
+          data-endpoint="/projects/delete_attribute_row"
           title="Delete this group"></i>
         {% endif %}
       </td>
