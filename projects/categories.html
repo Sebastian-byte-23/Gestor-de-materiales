@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Project Categories</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
+</head>
+{% import 'tables.html' as tables %}
+{% include 'tables.html' %}
+
+<body>
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h1 data-project-id="{{ project.project_id }}">{{ project.name }}</h1>
+            <div class="btn-group">
+                <a href="{{ url_for('projects.projects') }}" class="btn btn-secondary">Back to Projects</a>
+                <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown"
+                    aria-haspopup="true" aria-expanded="false">
+                    Export PDF
+                </button>
+                <div class="dropdown-menu">
+                    <a class="dropdown-item"
+                        href="{{ url_for('projects.generate_project_pdf_route', project_id=project.project_id, report_type='commercial') }}">Commercial
+                        Report</a>
+                    <a class="dropdown-item"
+                        href="{{ url_for('projects.generate_project_pdf_route', project_id=project.project_id, report_type='full') }}">Full
+                        Report</a>
+                </div>
+            </div>
+        </div>
+        <div class="d-flex justify-content-end">
+            <a href="{{ url_for('projects.project_history', project_id=project.project_id) }}" class="btn btn-info">
+                Ver historial de cambios
+            </a>
+        </div>
+
+
+        <div class="mb-3">
+            <button id="toggleAllAttributes" class="btn btn-outline-secondary btn-sm">
+                <i class="fas fa-table"></i> Esconder Atributos
+            </button>
+
+
+
+        </div>
+
+        <div class="category-tree">
+            <!-- Add data-category-id attribute -->
+            <h3>Items & Categorias</h3>
+            {% macro render_category(category) %}
+            <div class="category-item ml-3" data-category-id="{{ category.id }}"
+                data-item-type="{{ category.item_type }}">
+                <div class="d-flex align-items-center category-clickable">
+                    <span class="font-weight-medium">{{ category.name }}</span>
+                    <span class="linked-indicator ml-2" style="display:none; color: #28a745;">
+                    </span>
+                </div>
+                <div class="instances-container ml-4" id="instances-{{ category.id }}">
+                    <!-- Instances will be loaded here -->
+                    <div class="attributes-table-container"></div>
+                </div>
+                {% if category.item_type == 'window' %}
+                <ul class="list-group window-list" id="windowList-{{ category.id }}">
+                    <!-- Windows will be loaded here -->
+                </ul>
+                {% endif %}
+                {% if category.children %}
+                <div class="children ml-4">
+                    {% for child in category.children %}
+                    {{ render_category(child) }}
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+            {% endmacro %}
+
+            {% for category in categories %}
+            {{ render_category(category) }}
+            {% endfor %}
+        </div>
+        <style>
+            .category-tree {
+                margin: 20px 0;
+                padding: 15px;
+                border: 1px solid #eee;
+                border-radius: 4px;
+            }
+
+            .window-list .btn-danger {
+                opacity: 0.7;
+                transition: opacity 0.2s;
+            }
+
+            .window-list li:hover .btn-danger {
+                opacity: 1;
+            }
+
+            .category-item {
+                margin: 5px 0;
+                padding: 8px;
+                border-left: 1px solid #dee2e6;
+                background-color: #fafafa;
+            }
+
+            .children {
+                border-left: 1px solid #f0f0f0;
+                margin-left: 8px;
+            }
+
+            .ml-4 {
+                margin-left: 1.5rem;
+            }
+
+            .category-clickable {
+                cursor: pointer;
+                padding: 4px 8px;
+                border-radius: 4px;
+                transition: background-color 0.2s;
+            }
+
+            .category-clickable:hover {
+                background-color: #f0f0f0;
+            }
+
+            .instance-item {
+                margin: 5px 0 15px 0;
+                padding: 10px 12px;
+                background-color: #f8f9fa;
+                border-radius: 4px;
+                border: 1px solid #eee;
+                border-left: 4px solid #007bff;
+                position: relative;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            }
+
+            .instance-frame {
+                margin: 8px 0;
+                padding: 8px;
+                border: 1px solid #f0f0f0;
+                border-radius: 4px;
+                background-color: #fff;
+            }
+
+            .instance-name-container {
+                position: relative;
+                display: flex;
+                align-items: center;
+            }
+
+            .instance-actions {
+                display: flex;
+                margin-left: 8px;
+            }
+
+            .delete-instance-btn,
+            .edit-instance-btn {
+                cursor: pointer;
+                margin-left: 5px;
+                opacity: 0;
+                transition: opacity 0.2s;
+            }
+
+            .delete-instance-btn {
+                color: #dc3545;
+            }
+
+            .edit-instance-btn {
+                color: #007bff;
+            }
+
+            .instance-item:hover .delete-instance-btn,
+            .instance-item:hover .edit-instance-btn {
+                opacity: 1;
+            }
+
+            .delete-instance-btn:hover {
+                color: #bd2130;
+            }
+
+            .edit-instance-btn:hover {
+                color: #0056b3;
+            }
+
+            .attributes-table {
+                width: 100%;
+                margin-top: 10px;
+                margin-bottom: 10px;
+                border-collapse: collapse;
+            }
+
+            .attributes-table th,
+            .attributes-table td {
+                padding: 6px 10px;
+                border: 1px solid #ddd;
+                text-align: left;
+            }
+
+            .application-cell {
+                position: relative;
+            }
+
+            .delete-attribute-row {
+                color: #dc3545;
+                cursor: pointer;
+                position: absolute;
+                right: 5px;
+                top: 50%;
+                transform: translateY(-50%);
+                visibility: hidden;
+            }
+
+            .delete-attribute-row:hover {
+                color: #bd2130;
+            }
+
+            tr:hover .delete-attribute-row {
+                visibility: visible;
+            }
+
+            .attributes-table th {
+                background-color: #f5f5f5;
+                font-weight: bold;
+            }
+
+            .attributes-table tr:nth-child(even) {
+                background-color: #f9f9f9;
+            }
+
+            .attributes-table tr:hover {
+                background-color: #f0f0f0;
+            }
+
+            .show-attributes-btn {
+                margin-left: 5px;
+                font-size: 0.8rem;
+            }
+
+            .linked-accessories-section {
+                border-top: 1px dashed #ccc;
+                padding-top: 10px;
+            }
+
+            .linked-accessory {
+                background-color: #f8f9fa;
+                padding: 8px;
+                border-radius: 4px;
+                border-left: 2px solid #17a2b8;
+            }
+
+            .show-accessory-attributes-btn {
+                font-size: 0.8rem;
+            }
+
+            .accessory-name {
+                font-weight: 500;
+            }
+
+            .materials-section {
+                padding: 5px 10px;
+                margin-top: 10px;
+            }
+        </style>
+
+    </div>
+
+    {% include 'category_items_modal.html' %}
+    {% include 'instance_creation.html' %}
+    {% include 'linked_accessory_modal.html' %}
+    {% include 'instance_edit_delete.html' %}
+
+    <!-- Add scripts from tables macro -->
+    {{ tables.instance_table_scripts() }}
+    <script src="{{ url_for('projects.static_files', filename='table_logic.js') }}"></script>
+    <script src="{{ url_for('projects.static_files', filename='instance_edit_delete.js') }}"></script>
+    <script src="{{ url_for('projects.static_files', filename='linked_accessories.js') }}"></script>
+
+    <script>
+        // Store project ID in global scope for use in other scripts
+        window.projectId = {{ project.project_id }};
+
+        $(document).ready(function () {
+            // Store linked categories data in the global scope
+            window.linkedCategoriesData = {};
+
+            // Load windows for window-type categories
+            const projectId = {{ project.project_id }};
+        $.get(`/projects/windows/${projectId}`, function (data) {
+            if (data.windows && data.windows.length > 0) {
+                $('.category-item[data-item-type="window"]').each(function () {
+                    var $windowList = $(this).find('.window-list');
+                    $windowList.empty();
+                    data.windows.forEach(function (win) {
+                        $windowList.append(
+                            `<li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <span>${win.name}, ${win.total_width}x${win.total_height}, ${win.finish || 'White'}, ${win.profile || 'Standard'}</span>
+                                    <button class="btn btn-sm btn-danger delete-window-btn" data-window-id="${win.window_id}">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </li>`
+                        );
+                    });
+                });
+            }
+        });
+
+        // Load categories data and instances on page load
+        $('.category-item').each(function () {
+            const categoryId = $(this).data('category-id');
+            const projectId = {{ project.project_id }};
+
+        // First fetch category data to get linked categories
+        $.get(`/projects/category/${categoryId}/items`, function (data) {
+            // Store linked categories data for this category
+            if (data.linked_categories && data.linked_categories.length > 0) {
+                window.linkedCategoriesData[categoryId] = data.linked_categories;
+                // Show the linked indicator
+                $(`.category-item[data-category-id="${categoryId}"] .linked-indicator`).show();
+                console.log(`Category ${categoryId} has ${data.linked_categories.length} linked categories`);
+            }
+
+            // Then load instances with the linked categories data available
+            window.tableLogic.loadInstances(categoryId, projectId);
+            // Ensure instances are always visible
+            $(`#instances-${categoryId}`).show();
+        });
+            });
+
+        // Update linked category indicators after page load
+        $(document).ready(function () {
+            updateLinkedCategoryIndicators();
+        });
+
+        // Handle category click for showing modal (without toggling visibility)
+        $(document).on('click', '.category-clickable', function (e) {
+            const categoryItem = $(this).closest('.category-item');
+            const categoryId = categoryItem.data('category-id');
+            const categoryName = $(this).find('span:last').text();
+
+            // Check category item_type first
+            $.get(`/category/${categoryId}/item_type`)
+                .done(function (itemTypeData) {
+                    if (itemTypeData.item_type === 'window') {
+                        // Redirect to window list view with project_id
+                        const projectId = {{ project.project_id }};
+                    window.location.href = `/window_list/${categoryId}?project_id=${projectId}`;
+                    return;
+                }
+
+                        // Filter windows for this category if it's a window category
+                        if (itemTypeData.item_type === 'window' && window.projectWindows) {
+                const categoryWindows = window.projectWindows.filter(w => parseInt(w.category_id) === parseInt(categoryId));
+                if (categoryWindows.length > 0) {
+                    // Show filtered windows
+                    $('#windowsList').empty();
+                    $('#windowsSection').find('h3').text(`Windows in ${categoryName}`);
+                    categoryWindows.forEach(window => {
+                        $('#windowsList').append(`
+                                        <li class="list-group-item">
+                                            ${window.name} ${window.total_height}x${window.total_width} 
+                                            ${window.profile || 'Standard'} ${window.finish || 'White'}
+                                        </li>
+                                    `);
+                    });
+                    $('#windowsSection').show();
+                } else {
+                    $('#windowsSection').hide();
+                }
+            }
+
+            // Proceed with normal flow for items/accessories
+            $('#categoryName').text(categoryName);
+
+            // Fetch items and accessories for this category
+            $.get(`/projects/category/${categoryId}/items`, function (data) {
+                // Clear existing list
+                $('#categoryItemsList').empty();
+
+                // Store linked categories data for this category
+                if (data.linked_categories) {
+                    window.linkedCategoriesData[categoryId] = data.linked_categories;
+                }
+
+                // Combine and sort items and accessories
+                const allItems = [
+                    ...data.items.map(item => ({ name: item.name, type: 'Item' })),
+                    ...data.accessories.map(acc => ({ name: acc.name, type: 'Accessory' }))
+                ].sort((a, b) => a.name.localeCompare(b.name));
+
+                // Populate combined list
+                allItems.forEach(item => {
+                    $('#categoryItemsList').append(
+                        `<li class="list-group-item d-flex justify-content-between align-items-center">
+                                        ${item.name}
+                                        <span class="badge badge-secondary">${item.type}</span>
+                                    </li>`
+                    );
+                });
+
+                // Show the modal
+                $('#categoryItemsModal').modal('show');
+            });
+        })
+            .fail(function (xhr, status, error) {
+                console.error("Error fetching category item_type:", error);
+                // Fall back to normal behavior if the item_type check fails
+                $('#categoryName').text(categoryName);
+
+                // Fetch items and accessories for this category
+                $.get(`/projects/category/${categoryId}/items`, function (data) {
+                    // Clear existing list
+                    $('#categoryItemsList').empty();
+
+                    // Store linked categories data for this category
+                    if (data.linked_categories) {
+                        window.linkedCategoriesData[categoryId] = data.linked_categories;
+                    }
+
+                    // Combine and sort items and accessories
+                    const allItems = [
+                        ...data.items.map(item => ({ name: item.name, type: 'Item' })),
+                        ...data.accessories.map(acc => ({ name: acc.name, type: 'Accessory' }))
+                    ].sort((a, b) => a.name.localeCompare(b.name));
+
+                    // Populate combined list
+                    allItems.forEach(item => {
+                        $('#categoryItemsList').append(
+                            `<li class="list-group-item d-flex justify-content-between align-items-center">
+                                        ${item.name}
+                                        <span class="badge badge-secondary">${item.type}</span>
+                                    </li>`
+                        );
+                    });
+
+                    // Show the modal
+                    $('#categoryItemsModal').modal('show');
+                });
+            });
+            });
+
+        // Handle item click in the modal
+        $('#categoryItemsList').on('click', '.list-group-item', function () {
+            const itemName = $(this).contents().filter(function () {
+                return this.nodeType === 3;  // Text nodes only
+            }).text().trim();
+            const itemType = $(this).find('.badge').text().trim();
+            const projectId = {{ project.project_id }};  // Get from template context
+
+        // Close the categories modal
+        $('#categoryItemsModal').modal('hide');
+
+        // Reset the form
+        $('#instanceForm')[0].reset();
+        $('#attributesContainer').empty();
+        $('#existingInstanceAlert').addClass('d-none');
+        $('.instance-detail').show();
+        $('.instance-detail input, .instance-detail textarea').prop('disabled', false);
+        $('#modalTitle').text('Create Instance');
+        $('#saveInstance').text('Create Instance');
+
+        // Set hidden fields
+        $('#projectId').val(projectId);
+        $('#instanceId').val('');
+
+        // Fetch item details
+        $.get(`/projects/get_item_details/${itemType.toLowerCase()}/${encodeURIComponent(itemName)}`, function (data) {
+            // Set item ID and type
+            $('#itemId').val(data.id);
+            $('#itemType').val(itemType.toLowerCase());
+
+            // If it's an accessory, check if it already exists in the project
+            if (itemType.toLowerCase() === 'accessory') {
+                // Show application field for accessories
+                $('#applicationContainer').removeClass('d-none');
+
+                // Check if this accessory already exists in the project
+                $.ajax({
+                    url: `/projects/${projectId}/check_accessory_instance/${encodeURIComponent(data.id)}`,
+                    type: 'GET',
+                    success: function (response) {
+                        if (response.exists) {
+                            // Existing instance found
+                            $('#existingInstanceAlert').removeClass('d-none');
+                            $('#modalTitle').text('Add Attributes to Existing Accessory');
+                            $('#saveInstance').text('Add Attributes');
+
+                            // Disable and populate instance details
+                            $('.instance-detail input, .instance-detail textarea').prop('disabled', true);
+                            $('#instanceName').val(response.name);
+                            $('#instanceShortName').val(response.short_name);
+                            $('#instanceDescription').val(response.description);
+                            $('#instanceShortDescription').val(response.short_description);
+                            $('#instanceInstallation').val(response.installation);
+
+                            // Set the instance ID
+                            $('#instanceId').val(response.instance_id);
+
+                            // Populate attribute fields
+                            populateAttributeFields(data.attributes);
+                        } else {
+                            // No existing instance, populate form normally
+                            populateInstanceForm(data);
+                        }
+                    },
+                    error: function () {
+                        console.error('Error checking for existing accessory instance');
+                        populateInstanceForm(data);
+                    }
+                });
+            } else {
+                // For regular items, hide application field and populate form
+                $('#applicationContainer').addClass('d-none');
+                populateInstanceForm(data);
+            }
+        });
+            });
+
+        // Function to populate the instance form
+        function populateInstanceForm(data) {
+            $('#instanceName').val(data.name);
+            $('#instanceShortName').val(data.short_name);
+            $('#instanceDescription').val(data.description);
+            $('#instanceShortDescription').val(data.short_description);
+            $('#instanceInstallation').val(data.installation);
+
+            // Populate attribute fields
+            populateAttributeFields(data.attributes);
+        }
+
+        // Function to populate attribute fields
+        function populateAttributeFields(attributes) {
+            const container = $('#attributesContainer').empty();
+
+            // Generate a group ID for this set of attributes if it's an accessory
+            if ($('#itemType').val() === 'accessory') {
+                const groupId = 'new_group_' + Date.now().toString();
+
+                // Add hidden group ID field
+                $('<input type="hidden">').attr({
+                    id: 'attributeGroupId',
+                    name: 'group_id',
+                    value: groupId
+                }).appendTo(container);
+            }
+
+            attributes.forEach(attr => {
+                const div = $('<div class="form-group">').appendTo(container);
+                $('<label>').text(attr.name + ':').appendTo(div);
+
+                // Parse the values array if it's a string
+                let values = attr.value;
+                if (typeof attr.value === 'string') {
+                    try {
+                        values = JSON.parse(attr.value);
+                    } catch (e) {
+                        values = [attr.value]; // Use as single value if parsing fails
+                    }
+                } else if (!Array.isArray(values)) {
+                    values = [values]; // Convert to array if not already
+                }
+
+                // If values array is empty or has only one empty value, use text input
+                if (values.length === 0 || (values.length === 1 && values[0] === '')) {
+                    $('<input type="text" class="form-control">').attr({
+                        name: `attribute_${attr.name}`,
+                        required: true
+                    }).appendTo(div);
+                } else {
+                    // Otherwise use select dropdown
+                    const select = $('<select class="form-control">').attr({
+                        name: `attribute_${attr.name}`,
+                        required: true
+                    }).appendTo(div);
+
+                    // Add options from the values array
+                    values.forEach(val => {
+                        $('<option>').val(val).text(val).appendTo(select);
+                    });
+                }
+            });
+
+            // Show the instance creation modal
+            $('#instanceCreationModal').modal('show');
+        }
+
+        // Add linked accessory buttons function - MOVED to global scope
+        window.addLinkedAccessoryButtons = function (instanceElement, instance, categoryId) {
+            if (instance.type === 'Item' && window.linkedCategoriesData[categoryId] && window.linkedCategoriesData[categoryId].length > 0) {
+                const buttonGroup = $('<div class="btn-group ml-2"></div>');
+
+                window.linkedCategoriesData[categoryId].forEach(linkedCat => {
+                    const addButton = $(`<button class="btn btn-sm btn-outline-primary">Add ${linkedCat.name}</button>`);
+                    addButton.on('click', function (e) {
+                        e.stopPropagation();
+                        showLinkedAccessoryModal(linkedCat.category_id, linkedCat.name, instance.instance_id);
+                    });
+                    buttonGroup.append(addButton);
+                });
+
+                // Only add to the second div (the one with the badge and attributes button)
+                instanceElement.find('div:eq(1)').prepend(buttonGroup);
+            }
+        };
+
+        // Toggle all attributes visibility
+        $('#toggleAllAttributes').click(function () {
+            window.tableLogic.toggleAllAttributes();
+        });
+
+        // Wrap instances and tables in a frame
+        $(document).ajaxComplete(function () {
+            $('.instance-item').each(function () {
+                $(this).next('.attributes-table-container').andSelf().wrapAll('<div class="instance-frame"></div>');
+            });
+        });
+
+        // Handle save instance button click
+        $('#saveInstance').click(function () {
+            // Get form data
+            const formData = {
+                project_id: $('#projectId').val(),
+                item_id: $('#itemId').val(),
+                item_type: $('#itemType').val(),
+                name: $('#instanceName').val(),
+                short_name: $('#instanceShortName').val(),
+                description: $('#instanceDescription').val(),
+                short_description: $('#instanceShortDescription').val(),
+                installation: $('#instanceInstallation').val(),
+                instance_id: $('#instanceId').val() || null,
+                application: $('#instanceApplication').val() || '',
+                instance_type: $('#itemType').val(), // Add instance_type explicitly
+                linked_item_id: $('#linkedItemId').val() || null // Add linked item ID
+            };
+
+            // Collect attributes
+            const attributes = {};
+            $('#attributesContainer').find('.form-group').each(function () {
+                const input = $(this).find('input[type="text"], select');
+                if (input.length === 0) return; // Skip if no input found (might be a hidden input)
+
+                const inputName = input.attr('name');
+                if (!inputName) return; // Skip if no name attribute
+
+                // Extract the attribute name correctly based on the input name format
+                let name;
+                if (inputName.startsWith('attribute_')) {
+                    // For item attributes or simple accessory attributes
+                    name = inputName.replace('attribute_', '');
+                } else if (inputName !== 'group_id' && inputName !== 'application') {
+                    // Skip special fields
+                    name = inputName;
+                } else {
+                    return; // Skip this iteration for special fields
+                }
+
+                const value = input.val();
+                attributes[name] = value;
+            });
+
+            formData.attributes = attributes;
+
+            // Add group_id if it exists
+            if ($('#attributeGroupId').length) {
+                formData.group_id = $('#attributeGroupId').val();
+            }
+
+            // Determine if we're editing an existing instance or creating a new one
+            const isEditMode = $('#instanceForm').data('edit-mode') === true || $('#editMode').val() === 'true';
+            // Use the correct endpoints from instances_management.py
+            const url = isEditMode ? '/projects/update_instance' : '/projects/create_instance';
+
+            // Send AJAX request
+            $.ajax({
+                url: url,
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(formData),
+                success: function (response) {
+                    if (response.success) {
+                        // Close the modal
+                        $('#instanceCreationModal').modal('hide');
+
+                        // Reload the instances for the current category
+                        const categoryId = $('#categoryName').text().trim();
+                        const projectId = $('#projectId').val();
+
+                        // Reload all categories to ensure everything is up to date
+                        $('.category-item').each(function () {
+                            const catId = $(this).data('category-id');
+                            // This calls loadInstances from table_logic.js which uses the new endpoints
+                            window.tableLogic.loadInstances(catId, projectId);
+                        });
+
+                        // Instance created successfully - no alert needed
+                    } else {
+                        alert('Error creating instance: ' + (response.error || 'Unknown error'));
+                    }
+                },
+                error: function (xhr, status, error) {
+                    alert('Error creating instance: ' + error);
+                }
+            });
+        });
+
+        // Handle instance edit - delegate to the edit handler in instance_edit_delete.js
+        $(document).on('click', '.edit-instance-btn', function (e) {
+            e.stopPropagation();
+
+            const instanceId = $(this).data('instance-id');
+            const instanceType = $(this).data('instance-type');
+            const projectId = {{ project.project_id }};
+
+        // Call the edit instance handler from instance_edit_delete.js
+        handleEditInstance(instanceId, instanceType, projectId);
+            });
+
+        // Handle instance deletion - delegate to instance_edit_delete.js
+        $(document).on('click', '.delete-instance-btn', function (e) {
+            e.stopPropagation();
+
+            const instanceId = $(this).data('instance-id');
+            const instanceType = $(this).data('instance-type');
+            const projectId = {{ project.project_id }};
+
+        // Set values in the delete modal
+        $('#deleteInstanceId').val(instanceId);
+        $('#deleteInstanceType').val(instanceType);
+        $('#deleteProjectId').val(projectId);
+
+        // Show the delete confirmation modal
+        $('#deleteInstanceModal').modal('show');
+            });
+
+        // Handle attribute row deletion - delegate to instance_edit_delete.js
+        $(document).on('click', '.delete-attribute-row', function (e) {
+            e.stopPropagation();
+
+            const instanceId = $(this).data('instance-id');
+            const instanceType = $(this).data('instance-type');
+            const groupId = $(this).data('group-id');
+            const application = $(this).data('application');
+
+            // Set values in the delete modal
+            $('#deleteRowInstanceId').val(instanceId);
+            $('#deleteRowInstanceType').val(instanceType);
+            $('#deleteRowGroupId').val(groupId);
+            $('#deleteRowApplication').val(application);
+
+            // Show the delete confirmation modal
+            $('#deleteAttributeRowModal').modal('show');
+        });
+
+        // Handle window deletion
+        $(document).on('click', '.delete-window-btn', function (e) {
+            e.stopPropagation();
+            e.preventDefault();
+
+            const windowId = $(this).data('window-id');
+            if (confirm('Are you sure you want to delete this window from the project?')) {
+                $.ajax({
+                    url: `/projects/delete_project_window/${windowId}`,
+                    type: 'POST',
+                    success: function (response) {
+                        if (response.success) {
+                            // Reload windows after successful deletion
+                            $.get(`/projects/windows/${projectId}`, function (data) {
+                                $('.category-item[data-item-type="window"]').each(function () {
+                                    var $windowList = $(this).find('.window-list');
+                                    $windowList.empty();
+
+                                    if (data.windows && data.windows.length > 0) {
+                                        data.windows.forEach(function (win) {
+                                            $windowList.append(
+                                                `<li class="list-group-item d-flex justify-content-between align-items-center">
+                                                        <span>${win.name}, ${win.total_width}x${win.total_height}, ${win.finish || 'White'}, ${win.profile || 'Standard'}</span>
+                                                        <button class="btn btn-sm btn-danger delete-window-btn" data-window-id="${win.window_id}">
+                                                            <i class="fas fa-trash"></i>
+                                                        </button>
+                                                    </li>`
+                                            );
+                                        });
+                                    } else {
+                                        $windowList.append('<li class="list-group-item">No windows in this category</li>');
+                                    }
+                                });
+                            });
+                        } else {
+                            alert('Error deleting window: ' + response.message);
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        alert('Error deleting window: ' + error);
+                    }
+                });
+            }
+        });
+        // After page load, ensure all attribute tables are visible
+        setTimeout(function () {
+            // Update the global toggle button
+            window.tableLogic.updateGlobalToggleButton();
+        }, 1000);
+        });
+    </script>
+    <script>
+        // Ensure Back to Window List link carries project_id from URL if missing
+        document.addEventListener("DOMContentLoaded", function () {
+            const urlParams = new URLSearchParams(window.location.search);
+            const projectIdParam = urlParams.get('project_id');
+            if (projectIdParam) {
+                const backLink = document.querySelector('a[href^="/window_list/"]');
+                if (backLink) {
+                    const href = backLink.getAttribute('href');
+                    const urlObj = new URL(href, window.location.origin);
+                    urlObj.searchParams.set('project_id', projectIdParam);
+                    backLink.href = urlObj.pathname + "?" + urlObj.searchParams.toString();
+                }
+            }
+        });
+    </script>
+</body>
+
+</html>
