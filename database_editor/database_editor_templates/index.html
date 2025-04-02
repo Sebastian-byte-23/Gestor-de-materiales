@@ -182,7 +182,7 @@
                     <div class="category-buttons">
                         <button class="add-button" onclick="showAddModal({{ category.category_id }})">+ Subcategory</button>
                         <button class="add-item-button" onclick="showItemTypeModal({{ category.category_id }}, '{{ category.item_type }}')">+ Item</button>
-                        <button class="edit-button" onclick="showEditModal({{ category.category_id }}, '{{ category.name }}', {{ category.parent_id or 'null' }}, '{{ category.linked_categories or '' }}', '{{ category.item_type or 'item' }}')">Edit</button>
+                        <button class="edit-button" onclick="showEditModal({{ category.category_id }}, '{{ category.name }}', {{ category.parent_id or 'null' }}, '{{ category.linked_categories or '' }}', '{{ category.item_type or 'item' }}', {{ category.display_order or 0 }})">Edit</button>
                         <button class="delete-button" onclick="deleteCategory({{ category.category_id }})">Delete</button>
                     </div>
                 </div>
@@ -213,6 +213,40 @@
                 <div>
                     <label for="add_name">Category Name:</label>
                     <input type="text" id="add_name" name="name" required>
+                </div>
+                <div>
+                    <label>Item Type:</label>
+                    <div>
+                        <input type="radio" id="add_item_type_item" name="item_type" value="item" checked>
+                        <label for="add_item_type_item">Regular Item</label>
+                    </div>
+                    <div>
+                        <input type="radio" id="add_item_type_accessory" name="item_type" value="accessory">
+                        <label for="add_item_type_accessory">Accessory Item</label>
+                    </div>
+                    <div>
+                        <input type="radio" id="add_item_type_window" name="item_type" value="window">
+                        <label for="add_item_type_window">Window</label>
+                    </div>
+                </div>
+                <button type="submit">Add Category</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="addCategoryModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="hideAddModal()">&times;</span>
+            <h2>Add New Category</h2>
+            <form action="{{ url_for('add_category_route') }}" method="POST">
+                <input type="hidden" id="add_parent_id" name="parent_id" value="">
+                <div>
+                    <label for="add_name">Category Name:</label>
+                    <input type="text" id="add_name" name="name" required>
+                </div>
+                <div>
+                    <label for="add_display_order">Display Order:</label>
+                    <input type="number" id="add_display_order" name="display_order" value="0" min="0">
                 </div>
                 <div>
                     <label>Item Type:</label>

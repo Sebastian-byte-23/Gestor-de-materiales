@@ -77,7 +77,7 @@ def get_category_tree():
     
     def build_tree(parent_id=None):
         categories = main_db.execute(
-            'SELECT category_id, name, parent_id, item_type FROM Categories WHERE parent_id IS ? ORDER BY name',
+            'SELECT category_id, name, parent_id, item_type, display_order FROM Categories WHERE parent_id IS ? ORDER BY display_order, name',
             (parent_id,)
         ).fetchall()
         

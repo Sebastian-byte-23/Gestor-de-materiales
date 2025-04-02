@@ -31,7 +31,7 @@ def get_categories():
             SELECT c.*, p.name as parent_name 
             FROM Categories c
             LEFT JOIN Categories p ON c.parent_id = p.category_id
-            ORDER BY c.name
+            ORDER BY c.display_order, c.name
         """)
         all_categories = cursor.fetchall()
         
@@ -56,27 +56,29 @@ def get_categories():
         
         return root_categories
 
-def add_category(name, parent_id, item_type='item'):
+def add_category(name, parent_id, item_type='item', display_order=0):
     parent_id = int(parent_id) if parent_id else None
+    display_order = int(display_order) if display_order else 0 # Ensure display_order is an integer
     try:
         with get_db() as conn:
             cursor = conn.cursor()
             cursor.execute(
-                "INSERT INTO Categories (name, parent_id, item_type) VALUES (?, ?, ?)",
-                (name, parent_id, item_type)
+                "INSERT INTO Categories (name, parent_id, item_type, display_order) VALUES (?, ?, ?, ?)",
+                (name, parent_id, item_type, display_order)
             )
             conn.commit()
             return True, None
     except sqlite3.IntegrityError:
         return False, "A category with this name already exists at this level"
 
-def edit_category(category_id, name, parent_id, linked_categories, item_type='item'):
+def edit_category(category_id, name, parent_id, linked_categories, item_type='item', display_order=0):
     parent_id = int(parent_id) if parent_id else None
+    display_order = int(display_order) if display_order else 0 # Ensure display_order is an integer
     with get_db() as conn:
         cursor = conn.cursor()
         cursor.execute(
-            "UPDATE Categories SET name = ?, parent_id = ?, linked_categories = ?, item_type = ? WHERE category_id = ?",
-            (name, parent_id, linked_categories, item_type, category_id)
+            "UPDATE Categories SET name = ?, parent_id = ?, linked_categories = ?, item_type = ?, display_order = ? WHERE category_id = ?",
+            (name, parent_id, linked_categories, item_type, display_order, category_id)
         )
         conn.commit()
 

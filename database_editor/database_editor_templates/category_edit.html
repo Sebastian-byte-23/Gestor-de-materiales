@@ -9,6 +9,10 @@
                 <input type="text" id="edit_name" name="name" required>
             </div>
             <div>
+                <label for="edit_display_order">Display Order:</label>
+                <input type="number" id="edit_display_order" name="display_order" value="0" min="0">
+            </div>
+            <div>
                 <label for="edit_linked_categories">Linked Categories:</label>
                 <input type="hidden" id="edit_linked_categories" name="linked_categories">
                 <div id="linked_categories_display" style="margin: 5px 0; padding: 5px; border: 1px solid #ddd;"></div>
@@ -68,11 +72,14 @@ function showEditModal(categoryId, name, parentId, linkedCategories='', itemType
     document.getElementById('edit_parent_id').value = parentId || '';
     const linkedCategoryIds = linkedCategories.split(',').filter(x => x);
     document.getElementById('edit_linked_categories').value = linkedCategories;
+    document.getElementById('edit_display_order').value = displayOrder || 0; // Set display order
     selectedCategories = new Set(linkedCategoryIds);
     updateLinkedCategoriesDisplay();
-    
+
     // Set the item type radio button
-    if (itemType === 'accessory') {
+    if (itemType === 'window') {
+        document.getElementById('edit_item_type_window').checked = true;
+    } else if (itemType === 'accessory') {
         document.getElementById('edit_item_type_accessory').checked = true;
     } else {
         document.getElementById('edit_item_type_item').checked = true;

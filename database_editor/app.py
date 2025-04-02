@@ -214,7 +214,8 @@ def edit_category_route(category_id):
     parent_id = request.form["parent_id"]
     linked_categories = request.form["linked_categories"]
     item_type = request.form.get("item_type", "item")
-    edit_category(category_id, name, parent_id, linked_categories, item_type)
+    display_order = request.form.get("display_order", 0) # Get display_order from form
+    edit_category(category_id, name, parent_id, linked_categories, item_type, display_order)
     return redirect(url_for("database_editor"))
 
 
@@ -229,7 +230,8 @@ def add_category_route():
     name = request.form["name"]
     parent_id = request.form["parent_id"]
     item_type = request.form.get("item_type", "item")
-    success, error = add_category(name, parent_id, item_type)
+    display_order = request.form.get("display_order", 0) # Get display_order from form
+    success, error = add_category(name, parent_id, item_type, display_order)
 
     if not success:
         return error, 400
