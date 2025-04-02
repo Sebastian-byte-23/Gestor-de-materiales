@@ -243,7 +243,7 @@ def log_operation(
 
 
 @instances_bp.route('/delete_instance', methods=['DELETE'])
-    def delete_instance():
+def delete_instance():
         data = request.json
         current_app.logger.debug(f"Delete instance  {data}")  # Log the incoming data
         db = get_db()
@@ -311,7 +311,7 @@ def log_operation(
             return jsonify({'success': False, 'error': str(e)})
 
 @instances_bp.route('/delete_attribute_row', methods=['DELETE'])
-    def delete_attribute_row():
+def delete_attribute_row():
         data = request.json
         db = get_db()
         
