@@ -246,10 +246,14 @@ def log_operation(
 @instances_bp.route("/delete_instance", methods=["POST"])
 def delete_instance():
     data = request.json
-    current_app.logger.debug(f"Delete instance  {data}")  # Log the incoming data
+    current_app.logger.debug(f"Delete instance request: {data}")
     db = get_db()
 
     try:
+        # Validar datos de entrada
+        if not all(k in data for k in ["instance_type", "instance_id", "project_id"]):
+            return jsonify({"success": False, "error": "Missing required fields"})
+
         if data["instance_type"] == "item":
             # Find accessory instances that reference this item instance
             accessory_instances = db.execute(
@@ -303,20 +307,27 @@ def delete_instance():
                         (acc["accessory_instance_id"], str(data["instance_id"])),
                     )
 
-            # Delete item instance attributes (foreign key constraint)
-            current_app.logger.debug(
-                f"Deleting attributes for item instance {data['instance_id']}"
-            )
+            # Primero verificar si la instancia existe
+            instance = db.execute(
+                "SELECT 1 FROM Item_Instances WHERE instance_id = ? AND project_id = ?",
+                (data["instance_id"], data["project_id"])
+            ).fetchone()
+            
+            if not instance:
+                return jsonify({"success": False, "error": "Instance not found"})
+
+            # Eliminar atributos primero
+            current_app.logger.debug(f"Deleting attributes for item instance {data['instance_id']}")
             db.execute(
                 "DELETE FROM Item_Instance_Attributes WHERE instance_id = ?",
-                (data["instance_id"],),
+                (data["instance_id"],)
             )
 
-            # Then delete the item instance
+            # Luego eliminar la instancia
             current_app.logger.debug(f"Deleting item instance {data['instance_id']}")
             db.execute(
                 "DELETE FROM Item_Instances WHERE instance_id = ? AND project_id = ?",
-                (data["instance_id"], data["project_id"]),
+                (data["instance_id"], data["project_id"])
             )
         else:
             # Delete accessory instance attributes first (foreign key constraint)
@@ -349,10 +360,13 @@ def delete_instance():
 @instances_bp.route("/delete_attribute_row", methods=["POST"])
 def delete_attribute_row():
     data = request.json
+    current_app.logger.debug(f"Delete attribute request: {data}")
     db = get_db()
 
     try:
-        print("Datos recibidos para borrar atributo:", data)
+        # Validar datos de entrada
+        if not all(k in data for k in ["instance_type", "instance_id"]):
+            return jsonify({"success": False, "error": "Missing required fields"})
 
         if data["instance_type"] == "item":
             return jsonify(
@@ -363,13 +377,19 @@ def delete_attribute_row():
             )
 
         elif data.get("group_id"):
-            print("Eliminando por group_id:", data["group_id"])
+            current_app.logger.debug(f"Deleting by group_id: {data['group_id']}")
+            # Verificar si existen atributos con este group_id
+            exists = db.execute(
+                "SELECT 1 FROM Accessory_Instance_Attributes WHERE accessory_instance_id = ? AND group_id = ?",
+                (data["instance_id"], data["group_id"])
+            ).fetchone()
+            
+            if not exists:
+                return jsonify({"success": False, "error": "Attribute group not found"})
+
             db.execute(
-                """
-                DELETE FROM Accessory_Instance_Attributes 
-                WHERE accessory_instance_id = ? AND group_id = ?
-            """,
-                (data["instance_id"], data["group_id"]),
+                "DELETE FROM Accessory_Instance_Attributes WHERE accessory_instance_id = ? AND group_id = ?",
+                (data["instance_id"], data["group_id"])
             )
 
         elif data.get("application"):
