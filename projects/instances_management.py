@@ -306,14 +306,24 @@ def delete_instance():
                         (acc["accessory_instance_id"], str(data["instance_id"])),
                     )
 
-            # Primero verificar si la instancia existe
+            # Verificar si la instancia existe con más detalle
             instance = db.execute(
-                "SELECT 1 FROM Item_Instances WHERE instance_id = ? AND project_id = ?",
+                """
+                SELECT instance_id, name 
+                FROM Item_Instances 
+                WHERE instance_id = ? AND project_id = ?
+                """,
                 (data["instance_id"], data["project_id"])
             ).fetchone()
             
             if not instance:
-                return jsonify({"success": False, "error": "Instance not found"})
+                current_app.logger.warning(
+                    f"Item instance not found - ID: {data['instance_id']}, Project: {data['project_id']}"
+                )
+                return jsonify({
+                    "success": False, 
+                    "error": f"No se encontró la instancia de item con ID {data['instance_id']} en el proyecto"
+                }), 404
 
             # Eliminar atributos primero
             current_app.logger.debug(f"Deleting attributes for item instance {data['instance_id']}")
@@ -378,23 +388,53 @@ def delete_attribute_row():
         elif data.get("group_id"):
             current_app.logger.debug(f"Deleting by group_id: {data['group_id']}")
             
-            # Verificar si la instancia existe primero
-            instance_exists = db.execute(
-                "SELECT 1 FROM Accessory_Instance WHERE accessory_instance_id = ?",
+            # Verificar existencia con más información
+            instance = db.execute(
+                """
+                SELECT accessory_instance_id, name, project_id 
+                FROM Accessory_Instance 
+                WHERE accessory_instance_id = ?
+                """,
                 (data["instance_id"],)
             ).fetchone()
             
-            if not instance_exists:
-                return jsonify({"success": False, "error": "Accessory instance not found"})
-
-            # Verificar si existen atributos con este group_id
-            exists = db.execute(
-                "SELECT 1 FROM Accessory_Instance_Attributes WHERE accessory_instance_id = ? AND group_id = ?",
-                (data["instance_id"], data["group_id"])
-            ).fetchone()
+            if not instance:
+                current_app.logger.warning(
+                    f"Accessory instance not found - ID: {data['instance_id']}"
+                )
+                return jsonify({
+                    "success": False, 
+                    "error": f"No se encontró la instancia de accesorio con ID {data['instance_id']}"
+                }), 404
             
-            if not exists:
-                return jsonify({"success": False, "error": "No attributes found with this group_id"})
+            # Verificar que pertenece al proyecto correcto
+            if str(instance["project_id"]) != str(data.get("project_id", "")):
+                current_app.logger.warning(
+                    f"Accessory instance {data['instance_id']} doesn't belong to project {data.get('project_id', '')}"
+                )
+                return jsonify({
+                    "success": False,
+                    "error": f"La instancia de accesorio no pertenece al proyecto especificado"
+                }), 403
+
+            # Verificar atributos con más detalle
+            attributes = db.execute(
+                """
+                SELECT name, value 
+                FROM Accessory_Instance_Attributes 
+                WHERE accessory_instance_id = ? AND group_id = ?
+                """,
+                (data["instance_id"], data["group_id"])
+            ).fetchall()
+            
+            if not attributes:
+                current_app.logger.warning(
+                    f"No attributes found - Instance: {data['instance_id']}, Group: {data['group_id']}"
+                )
+                return jsonify({
+                    "success": False, 
+                    "error": f"No se encontraron atributos para el grupo {data['group_id']} en la instancia {data['instance_id']}"
+                }), 404
 
             # Eliminar los atributos
             result = db.execute(
