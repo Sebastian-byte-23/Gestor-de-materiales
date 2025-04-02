@@ -265,6 +265,19 @@ def add_category_route():
 
 @app.route("/edit_item", methods=["POST", "DELETE"])
 def edit_item_route():
+    if request.method == "DELETE":
+        # Lógica para DELETE
+        data = request.json
+        if data["type"] == "item":
+            from database_editor.items import delete_item
+            delete_item(data["id"])
+            return jsonify({"success": True})
+        else:
+            from database_editor.accessories import delete_accessory
+            delete_accessory(data["id"])
+            return jsonify({"success": True})
+    
+    # Lógica para POST
     data = request.json
     if data["type"] == "item":
         edit_item(
@@ -294,7 +307,7 @@ def edit_item_route():
     return jsonify({"success": True})
 
 
-@app.route("/delete_item/<int:item_id>/<string:item_type>", methods=["POST"])
+@app.route("/delete_item/<int:item_id>/<string:item_type>", methods=["DELETE"])
 def delete_item_route(item_id, item_type):
     if item_type == "item":
         from database_editor.items import delete_item
@@ -398,7 +411,7 @@ def edit_material_route():
     return jsonify({"success": True})
 
 
-@app.route("/materials/delete", methods=["POST"])
+@app.route("/materials/delete", methods=["DELETE"])
 def delete_material_route():
     data = request.json
     delete_material(data["material_id"])
@@ -431,7 +444,7 @@ def edit_material_condition_route():
     return jsonify({"success": True})
 
 
-@app.route("/materials/condition/delete", methods=["POST"])
+@app.route("/materials/condition/delete", methods=["DELETE"])
 def delete_material_condition_route():
     data = request.json
     delete_material_condition(data["condition_id"])
@@ -535,7 +548,7 @@ def save_window_route():
         return jsonify({"success": False, "message": error})
 
 
-@app.route("/delete_window/<int:window_id>", methods=["POST"])
+@app.route("/delete_window/<int:window_id>", methods=["DELETE"])
 def delete_window_route(window_id):
     success, category_id, error = delete_window(window_id)
 
