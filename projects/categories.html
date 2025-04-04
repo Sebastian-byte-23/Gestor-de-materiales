@@ -475,7 +475,7 @@
 
                 // Check if this accessory already exists in the project
                 $.ajax({
-                    url: `/projects/${projectId}/check_accessory_instance/${encodeURIComponent(data.id)}`,
+                    url: `/projects/instances/${projectId}/check_accessory_instance/${encodeURIComponent(data.id)}`,
                     type: 'GET',
                     success: function (response) {
                         if (response.exists) {
@@ -657,7 +657,7 @@
             // Determine if we're editing an existing instance or creating a new one
             const isEditMode = $('#instanceForm').data('edit-mode') === true || $('#editMode').val() === 'true';
             // Use the correct endpoints from instances_management.py
-            const url = isEditMode ? '/projects/update_instance' : '/projects/create_instance';
+            const url = isEditMode ? '/projects/instances/update_instance' : '/projects/instances/create_instance';
 
             // Send AJAX request
             $.ajax({

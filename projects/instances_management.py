@@ -3,10 +3,10 @@ import json
 import uuid
 from .data_retrieval import get_db
 import pytz
-import datetime
+from datetime import datetime
 
 # Create the Blueprint object
-instances_bp = Blueprint('instances', __name__, url_prefix='/instances')
+instances_bp = Blueprint('instances', __name__, url_prefix='/projects/instances')
 
 def register_routes(app):
     app.register_blueprint(instances_bp)
