@@ -20,7 +20,7 @@ $(document).ready(function() {
         });
 
         $.ajax({
-            url: '/projects/update_instance',
+            url: '/projects/instances/update_instance',
             method: 'POST',
             contentType: 'application/json',
             data: JSON.stringify(formData),

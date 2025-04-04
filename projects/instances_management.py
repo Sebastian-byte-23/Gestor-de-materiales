@@ -208,6 +208,81 @@ def delete_attribute_row():
         db.rollback()
         return jsonify({'success': False, 'error': str(e)})
 
+@instances_bp.route('/update_instance', methods=['POST'])
+def update_instance():
+    data = request.json
+    current_app.logger.debug(f"Update instance request data: {data}")
+    db = get_db()
+    
+    try:
+        # Handle accessory instance update
+        if data['instance_type'] == 'accessory':
+            # Update accessory instance basic info
+            db.execute('''
+                UPDATE Accessory_Instance
+                SET name = ?, short_name = ?, description = ?, short_description = ?, installation = ?
+                WHERE accessory_instance_id = ?
+            ''', (
+                data['name'], data['short_name'], data['description'],
+                data['short_description'], data['installation'], data['instance_id']
+            ))
+            
+            # Update attributes - for accessories, we don't update existing attributes
+            # Instead, we add new ones with the same application context
+            if 'attributes' in data and data['attributes']:
+                # Use existing group_id if provided, otherwise generate a new one
+                group_id = data.get('group_id', str(uuid.uuid4()))
+                application = data.get('application', '')
+                
+                for name, value in data['attributes'].items():
+                    db.execute('''
+                        INSERT INTO Accessory_Instance_Attributes (
+                            accessory_instance_id, name, value, application, group_id
+                        ) VALUES (?, ?, ?, ?, ?)
+                    ''', (data['instance_id'], name, json.dumps([value]), application, group_id))
+            
+        # Handle item instance update
+        elif data['instance_type'] == 'item':
+            # Update item instance basic info
+            db.execute('''
+                UPDATE Item_Instances
+                SET name = ?, short_name = ?, description = ?, short_description = ?, installation = ?
+                WHERE instance_id = ?
+            ''', (
+                data['name'], data['short_name'], data['description'],
+                data['short_description'], data['installation'], data['instance_id']
+            ))
+            
+            # Update attributes - for items, we update existing attributes or add new ones
+            if 'attributes' in data and data['attributes']:
+                for name, value in data['attributes'].items():
+                    # Check if attribute exists
+                    existing = db.execute('''
+                        SELECT * FROM Item_Instance_Attributes
+                        WHERE instance_id = ? AND name = ?
+                    ''', (data['instance_id'], name)).fetchone()
+                    
+                    if existing:
+                        # Update existing attribute
+                        db.execute('''
+                            UPDATE Item_Instance_Attributes
+                            SET value = ?
+                            WHERE instance_id = ? AND name = ?
+                        ''', (json.dumps([value]), data['instance_id'], name))
+                    else:
+                        # Add new attribute
+                        db.execute('''
+                            INSERT INTO Item_Instance_Attributes (instance_id, name, value)
+                            VALUES (?, ?, ?)
+                        ''', (data['instance_id'], name, json.dumps([value])))
+        
+        db.commit()
+        return jsonify({'success': True, 'instance_id': data['instance_id']})
+    except Exception as e:
+        db.rollback()
+        current_app.logger.error(f"Error updating instance: {e}")
+        return jsonify({'success': False, 'error': str(e)})
+
 @instances_bp.route('/<int:project_id>/check_accessory_instance/<int:accessory_id>', methods=['GET'])
 def check_accessory_instance(project_id, accessory_id):
     """Check if an accessory instance already exists for this project and accessory"""
