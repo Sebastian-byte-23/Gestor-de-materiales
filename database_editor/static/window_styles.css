@@ -1,0 +1,287 @@
+/* General body styles */
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 20px;
+}
+
+/* Container for centering content */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Heading style */
+h1 {
+  color: #333;
+  margin-bottom: 20px;
+}
+
+/* Window list styles */
+.window-list {
+  width: 100%;
+}
+
+/* Individual window item styles */
+.window-item {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 20px;
+  border-bottom: 1px solid #ddd;
+  padding-bottom: 20px;
+}
+
+/* Window header container */
+.window-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+/* Window name style */
+.window-name {
+  font-weight: bold;
+  font-size: 18px;
+  margin-right: auto;
+}
+
+/* Window SVG container */
+.window-svg {
+  height: 400px;
+  width: 600px;
+  background: #fff;
+}
+
+/* General button styles */
+.btn {
+  padding: 5px 10px;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 14px;
+  margin-left: 10px;
+}
+
+/* Edit button style */
+.btn-edit {
+  background-color: #4CAF50;
+  color: white;
+}
+
+/* Delete button style */
+.btn-delete {
+  background-color: #f44336;
+  color: white;
+}
+
+/* Back button style */
+.btn-back {
+  background-color: #2196F3;
+  color: white;
+  margin-bottom: 20px;
+}
+
+/* New window button style */
+.btn-new {
+  background-color: #4CAF50;
+  color: white;
+  margin-bottom: 20px;
+  margin-left: 10px;
+}
+
+/* Style for when no windows are present */
+.no-windows {
+  text-align: center;
+  padding: 20px;
+  background-color: #f9f9f9;
+  border-radius: 5px;
+  border: 1px solid #ddd;
+}
+
+/* Glass styling */
+.glass {
+  fill: #e1f5fe;
+  stroke: #01579b;
+  stroke-width: 2;
+}
+
+/* Frame styling */
+.frame {
+  fill: none;
+  stroke: #333;
+  stroke-width: 2;
+}
+
+/* Overlays for openings */
+.sliding-arrow {
+  stroke: #666;
+  stroke-dasharray: 10,10;
+  stroke-width: 3;
+  marker-end: url(#arrowhead-end);
+}
+
+/* Casement line style */
+.casement-line {
+  stroke: #666;
+  stroke-dasharray: 4,8;
+  stroke-width: 25;
+  fill: none;
+}
+
+/* Dimension lines */
+.dim-line {
+  stroke: #333;
+  stroke-width: 2;
+}
+
+/* Dimension text */
+.dim-text {
+  fill: #333;
+  font-size: 60px;
+  text-anchor: middle;
+}
+
+/* Window dimensions text */
+.window-dimensions {
+  color: #666;
+  font-size: 14px;
+  margin-left: 20px;
+}
+
+/* Body styles for the window designer page */
+body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100vh;
+  margin: 0;
+  padding: 20px;
+  font-family: sans-serif;
+}
+
+/* Controls container */
+#controls {
+  text-align: center;
+  margin-bottom: 20px;
+  width: 80%;
+  max-width: 900px;
+}
+
+/* Label styles */
+label {
+  margin: 0 10px;
+}
+
+/* Form group container */
+.form-group {
+  margin-bottom: 15px;
+}
+
+/* Window name input */
+#windowName {
+  padding: 8px;
+  width: 300px;
+  margin-bottom: 15px;
+}
+
+/* Button styles */
+button {
+  padding: 8px 15px;
+  margin: 5px;
+  cursor: pointer;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 4px;
+}
+
+/* Button hover style */
+button:hover {
+  background-color: #45a049;
+}
+
+/* Message container */
+#message {
+  margin: 10px 0;
+  padding: 10px;
+  border-radius: 4px;
+  display: none;
+}
+
+/* Success message style */
+.success {
+  background-color: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+
+/* Error message style */
+.error {
+  background-color: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+}
+
+/* Glass styling */
+#windowSVG {
+  width: 450px;
+  height: 350px;
+  border: 1px solid #ccc;
+  background: #fff;
+  display: block;
+  margin: 20px auto;
+}
+
+/* Glass styling */
+.glass {
+  fill: #ffffff;
+  stroke: #000000;
+  stroke-width: 4;
+}
+
+/* Frame styling */
+.frame {
+  fill: #efeeee;
+  stroke: #333;
+  stroke-width: 4;
+}
+
+/* Sliding arrow style */
+.sliding-arrow {
+  stroke-width: 2;
+  marker-end: url(#arrowhead-end);
+}
+
+/* Casement line style */
+.casement-line {
+  stroke-width: 4;
+  fill: none;
+}
+
+/* Dimension text style */
+.dim-text {
+  font-size: 60px;
+}
+
+#newGroupContainer {
+  display: none;
+  margin-top: 10px;
+}
+
+.window-svg {
+    border: 1px solid #cccccc00;
+    background: #fff;
+}
+
+.message {
+  margin: 10px 0;
+  padding: 10px;
+  border-radius: 4px;
+  display: none;
+}
+
+marker {
+    transform: scale(2);
+}

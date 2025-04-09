@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Editor de Proyectos</title>
+</head>
+<body>
+    <h2>Bienvenido {{ user['username'] }} al Editor de Proyectos</h2>
+
+    <p>Aquí colocarás tu editor de proyectos existente.</p>
+
+    <a href="{{ url_for('logout') }}">Cerrar sesión</a>
+</body>
+</html>

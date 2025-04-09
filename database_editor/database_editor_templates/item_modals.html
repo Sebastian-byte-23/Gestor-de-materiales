@@ -1,0 +1,174 @@
+<div id="itemTypeModal" class="modal">
+    <div class="modal-content" style="margin: auto; max-height: 90vh; overflow-y: auto;">
+        <span class="close" onclick="hideItemTypeModal()">&times;</span>
+        <h2>Add New Item</h2>
+        <div>
+            <input type="radio" id="regular_item" name="item_type" value="item" checked>
+            <label for="regular_item">Regular Item</label>
+        </div>
+        <div>
+            <input type="radio" id="accessory_item" name="item_type" value="accessory">
+            <label for="accessory_item">Accessory Item</label>
+        </div>
+        <div>
+            <input type="radio" id="window_item" name="item_type" value="window">
+            <label for="window_item">Window</label>
+        </div>
+        <button onclick="showItemForm()">Continue</button>
+    </div>
+</div>
+
+<script>
+function showItemTypeModal() {
+    document.getElementById('itemTypeModal').style.display = 'block';
+}
+
+function hideItemTypeModal() {
+    document.getElementById('itemTypeModal').style.display = 'none';
+}
+
+function hideItemFormModal() {
+    document.getElementById('itemFormModal').style.display = 'none';
+}
+
+function showItemForm() {
+    const itemType = document.querySelector('input[name="item_type"]:checked').value;
+    
+    // If window is selected, redirect to window designer page
+    if (itemType === 'window') {
+        window.location.href = `/window_designer/${currentCategoryId}`;
+        return;
+    }
+    
+    document.getElementById('item_type').value = itemType;
+    
+    document.getElementById('installation_field').style.display = 'block';
+    
+    document.getElementById('itemFormTitle').textContent = 
+        itemType === 'item' ? 'Add New Item' : 'Add New Accessory';
+    
+    hideItemTypeModal();
+    document.getElementById('itemFormModal').style.display = 'block';
+}
+
+function addAttributeField() {
+    const container = document.getElementById('attributes_container');
+    const attributeDiv = document.createElement('div');
+    attributeDiv.className = 'attribute-field';
+    attributeDiv.innerHTML = `
+        <div>
+            <label>Attribute Name:</label>
+            <input type="text" placeholder="Attribute Name" required>
+        </div>
+        <div class="values-container">
+            <div class="value-entry">
+                <input type="text" placeholder="Value" required>
+                <button type="button" onclick="this.parentElement.remove()">Remove</button>
+            </div>
+        </div>
+        <button type="button" onclick="addValueField(this.parentElement)">Add Value</button>
+        <button type="button" onclick="this.parentElement.remove()">Remove Attribute</button>
+    `;
+    container.appendChild(attributeDiv);
+}
+
+function addValueField(attributeDiv) {
+    const container = attributeDiv.querySelector('.values-container');
+    const valueDiv = document.createElement('div');
+    valueDiv.className = 'value-entry';
+    valueDiv.innerHTML = `
+        <input type="text" placeholder="Value" required>
+        <button type="button" onclick="this.parentElement.remove()">Remove</button>
+    `;
+    container.appendChild(valueDiv);
+}
+
+function submitItemForm(event) {
+    event.preventDefault();
+    const form = event.target;
+    
+    // Collect attributes
+    const attributes = [];
+    document.querySelectorAll('#attributes_container .attribute-field').forEach(field => {
+        const nameInput = field.querySelector('input');
+        const valueInputs = field.querySelectorAll('.values-container .value-entry input');
+        
+        attributes.push({
+            name: nameInput.value,
+            values: Array.from(valueInputs).map(input => input.value)
+        });
+    });
+    
+    // Prepare data for submission
+    const formData = {
+        name: form.name.value,
+        short_name: form.short_name.value,
+        description: form.description.value,
+        short_description: form.short_description.value,
+        installation: form.installation.value,
+        category_id: form.category_id.value,
+        type: form.type.value,
+        attributes: attributes
+    };
+    
+    // Submit the form
+    fetch('/add_item', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            hideItemFormModal();
+            location.reload();
+        } else {
+            alert('Error adding item: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error adding item');
+    });
+}
+</script>
+
+<div id="itemFormModal" class="modal">
+    <div class="modal-content" style="margin: auto; max-height: 90vh; overflow-y: auto;">
+        <span class="close" onclick="hideItemFormModal()">&times;</span>
+        <h2 id="itemFormTitle">Add New Item</h2>
+        <form id="itemForm" onsubmit="submitItemForm(event)">
+            <input type="hidden" id="item_category_id" name="category_id">
+            <input type="hidden" id="item_type" name="type">
+            
+            <div>
+                <label for="item_name">Name:</label>
+                <input type="text" id="item_name" name="name" required>
+            </div>
+            <div>
+                <label for="item_short_name">Short Name:</label>
+                <input type="text" id="item_short_name" name="short_name">
+            </div>
+            <div>
+                <label for="item_description">Description:</label>
+                <textarea id="item_description" name="description"></textarea>
+            </div>
+            <div>
+                <label for="item_short_description">Short Description:</label>
+                <textarea id="item_short_description" name="short_description"></textarea>
+            </div>
+            <div id="installation_field">
+                <label for="item_installation">Installation:</label>
+                <textarea id="item_installation" name="installation"></textarea>
+            </div>
+            
+            <h3>Attributes</h3>
+            <div id="attributes_container"></div>
+            <button type="button" onclick="addAttributeField()">Add Attribute</button>
+            
+            <button type="submit">Save</button>
+        </form>
+    </div>
+</div>

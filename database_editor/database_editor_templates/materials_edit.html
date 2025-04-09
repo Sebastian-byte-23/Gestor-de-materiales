@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Manage Materials</title>
+    <style>
+        .material-entry {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .condition-entry {
+            margin: 10px 0;
+            padding: 10px;
+            border: 1px solid #eee;
+            background: #f9f9f9;
+        }
+        input {
+            margin: 5px;
+            padding: 5px;
+        }
+        button {
+            margin: 5px;
+            padding: 5px 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Manage Materials</h1>
+    <p>Item: {{ item_name }}, Type: {{ item_type }}</p>
+    <button onclick="window.location.href='/database_editor'">Back to Index</button>
+
+    <script>
+        const itemAttributes = {{ item_attributes | tojson }};
+function updateUnits(element) {
+    const materialDiv = element.closest('.material-entry');
+    const materialId = materialDiv.dataset.materialId;
+    if (!materialId) {
+        alert('Please save the material before updating units.');
+        return;
+    }
+    const units = element.value;
+    fetch('/materials/units/edit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ material_id: materialId, units: units })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (!data.success) {
+            alert('Failed to update units: ' + data.message);
+        }
+    })
+    .catch(error => alert('Error updating units'));
+}
+
+    </script>
+
+    <div id="materialsList">
+        {% for material in materials %}
+        <div class="material-entry" data-material-id="{{ material.material_id }}">
+            <input type="text" class="material-name" value="{{ material.material_name }}" placeholder="Material Name" oninput="saveMaterial(this)">
+            <input type="text" class="material-sku" value="{{ material.SKU }}" placeholder="SKU" oninput="saveMaterial(this)">
+            <button onclick="deleteMaterial(this)">Delete Material</button>
+            <label>Units: 
+                <label><input type="radio" name="units-{{ material.material_id }}" value="UN" onchange="updateUnits(this)" {% if material.units == 'UN' %}checked{% endif %}> UN</label>
+                <label><input type="radio" name="units-{{ material.material_id }}" value="ML" onchange="updateUnits(this)" {% if material.units == 'ML' %}checked{% endif %}> ML</label>
+                <label><input type="radio" name="units-{{ material.material_id }}" value="KG" onchange="updateUnits(this)" {% if material.units == 'KG' %}checked{% endif %}> KG</label>
+            </label>
+
+            <div class="conditions">
+                {% for condition in material.conditions %}
+                <div class="condition-entry" data-condition-id="{{ condition.condition_id }}">
+                    <input type="text" class="group-id" value="{{ condition.group_id }}" placeholder="Group ID" oninput="saveCondition(this)">
+                    
+                    <select class="attribute-name" onchange="updateValueOptions(this); saveCondition(this)">
+                      <option value="">Select attribute</option>
+                      {% for attr, values in item_attributes.items() %}
+                        <option value="{{ attr }}" {% if attr == condition.attribute_name %}selected{% endif %}>{{ attr }}</option>
+                      {% endfor %}
+                    </select>
+                    
+                    <select class="operator" onchange="saveCondition(this)">
+                      <option value="=" {% if condition.operator == '=' %}selected{% endif %}>=</option>
+                      <option value="BETWEEN" {% if condition.operator == 'BETWEEN' %}selected{% endif %}>BETWEEN</option>
+                      <option value="IN" {% if condition.operator == 'IN' %}selected{% endif %}>IN</option>
+                      <option value=">" {% if condition.operator == '>' %}selected{% endif %}>&gt;</option>
+                      <option value="IS NOT NULL" {% if condition.operator == 'IS NOT NULL' %}selected{% endif %}>IS NOT NULL</option>
+                    </select>
+                    
+                    <select class="condition-value" onchange="saveCondition(this)">
+                      <option value="">{{ condition.value if condition.value else "Select value" }}</option>
+                      {% if condition.attribute_name and item_attributes.get(condition.attribute_name) %}
+                        {% for val in item_attributes[condition.attribute_name] %}
+                          <option value="{{ val }}" {% if val == condition.value %}selected{% endif %}>{{ val }}</option>
+                        {% endfor %}
+                      {% endif %}
+                    </select>
+                    
+                    <button onclick="deleteCondition(this)">Delete Condition</button>
+                </div>
+                {% endfor %}
+                <button onclick="addCondition(this)">Add Condition</button>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <button onclick="addMaterial()">Add New Material</button>
+
+    <script>
+        function addMaterial() {
+            const materialsList = document.getElementById('materialsList');
+            const materialDiv = document.createElement('div');
+            materialDiv.className = 'material-entry';
+            materialDiv.innerHTML = `
+                <input type="text" class="material-name" placeholder="Material Name" oninput="saveMaterial(this)">
+                <input type="text" class="material-sku" placeholder="SKU" oninput="saveMaterial(this)">
+                <div class="units">
+                    <label>Units: 
+                        <label><input type="radio" name="units-new" value="UN" onchange="updateUnits(this)"> UN</label>
+                        <label><input type="radio" name="units-new" value="ML" onchange="updateUnits(this)"> ML</label>
+                        <label><input type="radio" name="units-new" value="KG" onchange="updateUnits(this)"> KG</label>
+                    </label>
+                </div>
+                <div class="conditions">
+                    <button onclick="addCondition(this)">Add Condition</button>
+                </div>
+            `;
+            materialsList.appendChild(materialDiv);
+        }
+
+        function saveMaterial(element) {
+            const materialDiv = element.closest('.material-entry');
+            const materialId = materialDiv.dataset.materialId;
+            const materialName = materialDiv.querySelector('.material-name').value;
+            const SKU = materialDiv.querySelector('.material-sku').value;
+
+            const url = materialId ? '/materials/edit' : '/materials/add';
+            const data = materialId ? 
+                { material_id: materialId, material_name: materialName, SKU: SKU } :
+                { 
+                    item_id: {{ item_id }}, 
+                    item_type: '{{ item_type }}',
+                    material_name: materialName, 
+                    SKU: SKU 
+                };
+
+            fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    if (data.material_id) {
+                        materialDiv.dataset.materialId = data.material_id;
+                    }
+                    // Update the material ID in the DOM
+                }
+            })
+            .catch(error => alert('Error saving material'));
+        }
+
+        function deleteMaterial(button) {
+            const materialDiv = button.closest('.material-entry');
+            const materialId = materialDiv.dataset.materialId;
+            
+            if (!materialId) {
+                materialDiv.remove();
+                return;
+            }
+
+            if (confirm('Are you sure you want to delete this material?')) {
+                fetch('/materials/delete', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ material_id: materialId })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        materialDiv.remove();
+                    }
+                })
+                .catch(error => alert('Error deleting material'));
+            }
+        }
+
+        function addCondition(button) {
+            const conditionsDiv = button.closest('.conditions');
+            const materialDiv = button.closest('.material-entry');
+            const materialId = materialDiv.dataset.materialId;
+            
+            // If no material ID exists yet, save the material first
+            if (!materialId) {
+                const nameInput = materialDiv.querySelector('.material-name');
+                const skuInput = materialDiv.querySelector('.material-sku');
+                
+                // Only proceed if we have at least a name
+                if (nameInput.value.trim() === '') {
+                    alert('Please enter a material name first');
+                    return;
+                }
+                
+                // Save the material first, then continue with condition
+                fetch('/materials/add', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        item_id: {{ item_id }}, 
+                        item_type: '{{ item_type }}',
+                        material_name: nameInput.value, 
+                        SKU: skuInput.value || ''
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        materialDiv.dataset.materialId = data.material_id;
+                        addConditionToDOM(conditionsDiv, button);
+                    }
+                })
+                .catch(error => console.error('Error saving material:', error));
+            } else {
+                addConditionToDOM(conditionsDiv, button);
+            }
+        }
+        
+        function addConditionToDOM(conditionsDiv, button) {
+            const conditionDiv = document.createElement('div');
+            conditionDiv.className = 'condition-entry';
+            conditionDiv.innerHTML = `
+                <input type="text" class="group-id" placeholder="Group ID" oninput="saveCondition(this)">
+                <select class="attribute-name" onchange="updateValueOptions(this)">
+                    <option value="">Select attribute</option>
+                    ${Object.entries(itemAttributes).map(
+                      ([attr, values]) => `<option value="${attr}">${attr}</option>`
+                    ).join('')}
+                </select>
+                <select class="operator">
+                    <option value="=">=</option>
+                    <option value="BETWEEN">BETWEEN</option>
+                    <option value="IN">IN</option>
+                    <option value=">">&gt;</option>
+                    <option value="IS NOT NULL">IS NOT NULL</option>
+                </select>
+                <select class="condition-value">
+                    <option value="">Select value</option>
+                </select>
+                <button onclick="deleteCondition(this)">Delete Condition</button>
+            `;
+            conditionsDiv.insertBefore(conditionDiv, button);
+        }
+
+        function saveCondition(element) {
+            const conditionDiv = element.closest('.condition-entry');
+            const conditionId = conditionDiv.dataset.conditionId;
+            const materialId = conditionDiv.closest('.material-entry').dataset.materialId;
+            
+            const data = {
+                condition_id: conditionId,
+                material_id: materialId,
+                group_id: conditionDiv.querySelector('.group-id').value,
+                attribute_name: conditionDiv.querySelector('.attribute-name').value,
+                operator: conditionDiv.querySelector('.operator').value,
+                value: conditionDiv.querySelector('.condition-value').value
+            };
+
+            const url = conditionId ? '/materials/condition/edit' : '/materials/condition/add';
+
+            fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Update condition ID if needed
+                    if (data.condition_id && !conditionDiv.dataset.conditionId) {
+                        conditionDiv.dataset.conditionId = data.condition_id;
+                    }
+                }
+            })
+            .catch(error => alert('Error saving condition'));
+        }
+
+        function updateValueOptions(attributeSelect) {
+            const selectedAttribute = attributeSelect.value;
+            const conditionValueSelect = attributeSelect.parentElement.querySelector('.condition-value');
+            conditionValueSelect.innerHTML = '<option value="">Select value</option>';
+            const possibleValues = itemAttributes[selectedAttribute] || [];
+            possibleValues.forEach(val => {
+                const option = document.createElement('option');
+                option.value = val;
+                option.textContent = val;
+                conditionValueSelect.appendChild(option);
+            });
+        }
+
+        function deleteCondition(button) {
+            const conditionDiv = button.closest('.condition-entry');
+            const conditionId = conditionDiv.dataset.conditionId;
+
+            if (!conditionId) {
+                conditionDiv.remove();
+                return;
+            }
+
+            if (confirm('Are you sure you want to delete this condition?')) {
+                fetch('/materials/condition/delete', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ condition_id: conditionId })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        conditionDiv.remove();
+                    }
+                })
+                .catch(error => alert('Error deleting condition'));
+            }
+        }
+    </script>
+</body>
+</html>

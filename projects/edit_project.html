@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Edit Project</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Edit Project</h1>
+        <form method="post" action="{{ url_for('projects.edit_project', project_id=project.project_id) }}">
+            <div class="form-group">
+                <label for="name">Project Name:</label>
+                <input type="text" name="name" id="name" class="form-control" value="{{ project.name }}">
+            </div>
+            <button type="submit" class="btn btn-primary">Update Project</button>
+            <a href="{{ url_for('projects.projects') }}" class="btn btn-secondary">Cancel</a>
+        </form>
+    </div>
+</body>
+</html>

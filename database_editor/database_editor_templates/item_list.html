@@ -1,0 +1,19 @@
+{% macro render_items(items, accessories) %}
+    <div class="items-list">
+        {% if items %}
+            {% for item in items %}
+                <div class="item-entry">
+                    <span class="item-name" onclick='showEditItemModal({{ item|tojson|safe }}, "item")'>{{ item.name }}</span>
+                </div>
+            {% endfor %}
+        {% endif %}
+        
+        {% if accessories %}
+            {% for accessory in accessories %}
+                <div class="item-entry">
+                    <span class="item-name" onclick='showEditItemModal({{ accessory|tojson|safe }}, "accessory")'>{{ accessory.name }}</span>
+                </div>
+            {% endfor %}
+        {% endif %}
+    </div>
+{% endmacro %}

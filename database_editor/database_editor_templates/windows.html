@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>Window Designer</title>
+  <link rel="stylesheet" href="/static/window_styles.css">
+</head>
+<body>
+  <div id="controls">
+    <form id="windowForm">
+      <!-- Hidden input for window_id when editing -->
+      <input type="hidden" id="windowId" name="window_id" value="{{ window_id }}">
+      <!-- Hidden input for category_id -->
+      <input type="hidden" id="categoryId" name="category_id" value="{{ category_id }}">
+      <!-- Hidden input for pane states -->
+      <input type="hidden" id="paneStatesData" value="{{ window.pane_states|tojson if window and window.pane_states else '{}' }}">
+      
+      <div class="form-group">
+        <label for="windowName">Window Name:</label>
+        <input type="text" id="windowName" name="name" required value="{{ window.name if window else '' }}">
+      </div>
+      
+      <div class="form-group">
+        <label for="windowGroup">Window Group:</label>
+        <select id="windowGroup" name="window_group" onchange="toggleNewGroupInput()">
+          <option value="">-- No Group --</option>
+          {% for group in window_groups %}
+            <option value="{{ group }}" {% if window and window.window_group == group %}selected{% endif %}>{{ group }}</option>
+          {% endfor %}
+          <option value="new">+ Create New Group</option>
+        </select>
+        
+        <div id="newGroupContainer" class="new-group-container">
+          <label for="newGroupName">New Group Name:</label>
+          <input type="text" id="newGroupName" name="new_group_name" placeholder="Enter new group name">
+        </div>
+      </div>
+      
+      <!-- The sliders now represent overall (outer) dimensions -->
+      <label>Total Height: <span id="heightValue" onclick="editValue('height', 400, 3000, 25)">{{ window.total_height if window else 1000 }}</span></label>
+      <input type="range" id="height" name="total_height" min="400" max="3000" value="{{ window.total_height if window else 2000 }}" step="25" oninput="updateWindow()">
+
+      <label>Total Width: <span id="widthValue" onclick="editValue('width', 400, 3000, 25)">{{ window.total_width if window else 1500 }}</span></label>
+      <input type="range" id="width" name="total_width" min="400" max="3000" value="{{ window.total_width if window else 1500 }}" step="25" oninput="updateWindow()">
+
+      <!-- For vertical splits, the bottom slider represents the outer bottom portion -->
+      <label id="bottomHeightLabel">Bottom Height: <span id="bottomHeightValue" onclick="editValue('bottomHeight', 100, 2000, 10)">{{ window.bottom_height if window else 400 }}</span></label>
+      <input type="range" id="bottomHeight" name="bottom_height" min="100" max="1000" value="{{ window.bottom_height if window else 600 }}" step="10" oninput="updateWindow()">
+
+      <!-- For horizontal splits, the left slider represents the outer left portion -->
+      <label id="leftWidthLabel">Left Width: <span id="leftWidthValue" onclick="editValue('leftWidth', 100, 2000, 10)">{{ window.left_width if window else 800 }}</span></label>
+      <input type="range" id="leftWidth" name="left_width" min="100" max="2000" value="{{ window.left_width if window else 800 }}" step="10" oninput="updateWindow()">
+
+      <label>Window Type:
+        <select id="windowType" name="window_type" onchange="updateWindow()">
+          <option value="three-pane" {% if window and window.window_type == 'three-pane' %}selected{% endif %}>Three Pane (Horizontal Split)</option>
+          <option value="two-pane" {% if window and window.window_type == 'two-pane' %}selected{% endif %}>Two Pane (Vertical Split)</option>
+          <option value="two-pane-vertical" {% if window and window.window_type == 'two-pane-vertical' %}selected{% endif %}>Two Pane (Horizontal Split)</option>
+          <option value="single-pane" {% if window and window.window_type == 'single-pane' %}selected{% endif %}>Single Pane</option>
+        </select>
+      </label>
+
+      <br>
+      <button type="button" onclick="saveWindow()">Save Window</button>
+      <button type="button" onclick="exportSVG()">Export SVG</button>
+      <a href="/window_list/{{ category_id }}{{ '?' + request.query_string.decode('utf-8') if request.query_string else '' }}"><button type="button">Back to Window List</button></a>
+    </form>
+  </div>
+
+  <div id="message" class="message"></div>
+  <svg id="windowSVG" class="window-svg"></svg>
+
+  <script src="/static/windows.js"></script>
+  <script>
+    function toggleNewGroupInput() {
+      const groupSelect = document.getElementById('windowGroup');
+      const newGroupContainer = document.getElementById('newGroupContainer');
+      
+      if (groupSelect.value === 'new') {
+        newGroupContainer.style.display = 'block';
+      } else {
+        newGroupContainer.style.display = 'none';
+      }
+    }
+    
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', function() {
+      toggleNewGroupInput();
+    });
+  </script>
+</body>
+</html>

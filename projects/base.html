@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>{% block title %}{% endblock %}</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+
+    {% block head %}{% endblock %}
+</head>
+
+<body>
+    <div class="container">
+        <a href="./categories" class="btn btn-secondary">Back to Home</a>
+        {% block content %}{% endblock %}
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    {% block scripts %}{% endblock %}
+
+    <script>
+        function makeResizable(table) {
+            const cols = table.querySelectorAll("th");
+
+            cols.forEach((col) => {
+                const resizer = document.createElement("div");
+                resizer.style.position = "absolute";
+                resizer.style.right = "0";
+                resizer.style.top = "0";
+                resizer.style.height = "100%";
+                resizer.style.width = "5px";
+                resizer.style.cursor = "col-resize";
+                resizer.style.zIndex = "10";
+                resizer.style.userSelect = "none";
+
+                col.style.position = "relative";
+                col.appendChild(resizer);
+
+                let x = 0, w = 0;
+
+                const mouseDown = (e) => {
+                    x = e.clientX;
+                    w = col.offsetWidth;
+
+                    document.addEventListener("mousemove", mouseMove);
+                    document.addEventListener("mouseup", mouseUp);
+                };
+
+                const mouseMove = (e) => {
+                    const dx = e.clientX - x;
+                    col.style.width = `${w + dx}px`;
+                };
+
+                const mouseUp = () => {
+                    document.removeEventListener("mousemove", mouseMove);
+                    document.removeEventListener("mouseup", mouseUp);
+                };
+
+                resizer.addEventListener("mousedown", mouseDown);
+            });
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            const table = document.getElementById("resizableTable");
+            if (table) makeResizable(table);
+        });
+    </script>
+
+
+</body>
+
+</html>

@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Preview {{ project.name }}</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    {% import 'tables.html' as tables %}
+    {% include 'tables.html' %}
+    <style>
+        body { 
+            font-family: 'Times New Roman', serif; 
+            background: white !important;
+            color: black !important;
+        }
+        .category-number {
+            font-weight: bold;
+            margin-right: 8px;
+        }
+        .instance-number {
+            font-weight: bold;
+            margin-right: 5px;
+            font-size: 0.9em; /* Reduced instance number size */
+        }
+        .category-header {
+            margin-top: 20px;
+            margin-bottom: 10px;
+            padding-bottom: 3px;
+            border-bottom: 1px solid #ddd;
+        }
+        .instance-section {
+            margin: 15px 0;
+            page-break-inside: avoid;
+        }
+        .attributes-table {
+            width: 100%;
+            margin: 10px 0;
+            border-collapse: collapse;
+        }
+        .attributes-table th, 
+        .attributes-table td {
+            padding: 4px 8px;
+            border: 1px solid #ddd;
+            text-align: left;
+            background: white !important;
+        }
+        .attributes-table th {
+            font-weight: bold;
+        }
+        .linked-accessory-section {
+            margin: 10px 0 0 25px;
+        }
+        .accessory-name {
+            font-weight: bold;
+        }
+        .navigation-buttons {
+            position: fixed;
+            left: 20px;
+            top: 20px;
+            z-index: 1000;
+            display: flex;
+            gap: 10px;
+        }
+        .print-button {
+            position: fixed;
+            right: 20px;
+            top: 20px;
+            z-index: 1000;
+        }
+            .print-button { display: none; }
+        }
+
+        /* Replace the existing PDF button with these two buttons */
+        .print-button {
+            position: fixed;
+            right: 20px;
+            top: 20px;
+            z-index: 1000;
+        }
+        .attributes-table tr {
+          border-bottom: 1px solid #ddd;
+        }
+
+        .attributes-table tr.group-separator {
+          border-bottom: 2px solid #999;
+        }
+
+        .application-cell {
+          font-weight: 500;
+          color: #444;
+          background-color: #f8f9fa;
+          position: relative;
+        }
+
+        .linked-accessory {
+          border-left: 3px solid #eee;
+          padding-left: 1rem;
+        }
+
+        .materials-section {
+            padding: 5px 10px;
+            margin-top: 10px;
+        }
+        .instance-name {
+            font-size: 1.1em; /* Reduced instance name size */
+        }
+        /* In commercial view, hide execution-only parts */
+        #mainContainer.commercial-view .execution-view-header,
+        #mainContainer.commercial-view .execution-only {
+            display: none;
+        }
+        /* In execution view, hide commercial parts */
+        #mainContainer.execution-view .commercial-view-header {
+            display: none;
+        }
+        .instance-short-name, .instance-short-description, .instance-description, .instance-installation {
+            font-size: 0.95em; /* Reduced size for descriptions and installation */
+        }
+    </style>
+</head>
+<body>
+    <div id="mainContainer" class="container commercial-view">
+        <div class="navigation-buttons">
+            <a href="{{ url_for('projects.projects') }}" class="btn btn-info">Back to Projects</a>
+            <a href="{{ url_for('projects.project_categories', project_id=project.project_id) }}" class="btn btn-secondary">Edit Project</a>
+            <select id="fontSelector" class="btn btn-secondary" onchange="changeFont()">
+                <option value="Times New Roman">Times New Roman</option>
+                <option value="Arial">Arial</option>
+                <option value="Courier New">Courier New</option>
+                <option value="Georgia">Georgia</option>
+                <option value="Verdana">Verdana</Verdana>
+            </select>
+            <button id="toggleViewBtn" class="btn btn-secondary">Switch to Execution View</button>
+            <div class="btn-group">
+                <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    Generate PDF
+                </button>
+                <div class="dropdown-menu">
+                    <a class="dropdown-item" href="{{ url_for('projects.generate_project_pdf_route', project_id=project.project_id, report_type='commercial') }}">Commercial Report</a>
+                    <a class="dropdown-item" href="{{ url_for('projects.generate_project_pdf_route', project_id=project.project_id, report_type='full') }}">Full Report</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Replace the existing PDF button with these two buttons -->
+        <div class="print-button">
+            <a href="{{ url_for('projects.generate_project_pdf_route', project_id=project.project_id, report_type='commercial') }}" class="btn btn-primary ml-2">Generate Commercial PDF</a>
+            <a href="{{ url_for('projects.generate_project_pdf_route', project_id=project.project_id, report_type='full') }}" class="btn btn-primary ml-2">Generate Full PDF</a>
+        </div>
+
+        <h1 class="text-center mb-4">{{ project.name }}</h1>
+
+        <!-- Make sure you have Bootstrap's JS and Popper.js included -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+        <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+
+        <script>
+            function changeFont() {
+                var selectedFont = document.getElementById("fontSelector").value;
+                document.body.style.fontFamily = selectedFont;
+            }
+            //initial font application
+            changeFont();
+        </script>
+        <script>
+            $(document).ready(function(){
+                $('#toggleViewBtn').click(function(){
+                    if ($('#mainContainer').hasClass('commercial-view')) {
+                        // Switch to Execution View
+                        $('#mainContainer').removeClass('commercial-view').addClass('execution-view');
+                        $(this).text('Switch to Commercial View');
+                    } else {
+                        // Switch to Commercial View
+                        $('#mainContainer').removeClass('execution-view').addClass('commercial-view');
+                        $(this).text('Switch to Execution View');
+                    }
+                });
+            });
+        </script>
+        
+        {% macro render_category(category, number) %}
+            <div class="category-section">
+                <div class="category-header">
+                    <span class="category-number">{{ number }}.</span>
+                    <span style="font-size: 1.2em">{{ category.name }}</span>
+                </div>
+
+                {% if category.instances %}
+                    <div class="instance-list">
+                        {% for instance in category.instances %}
+                            <div class="instance-section">
+                                <!-- Execution View: displays instance name, description, and installation -->
+                                <div class="instance-header execution-view-header mb-3">
+                                    <div class="d-flex align-items-baseline">
+                                        <span class="instance-number">{{ number }}.{{ loop.index }}.</span>
+                                        <h4 class="instance-name mb-0 mr-2">{{ instance.name }}</h4>
+                                    </div>
+                                    {% if instance.description %}
+                                    <div class="mt-2 instance-description">{{ instance.description }}</div>
+                                    {% endif %}
+                                    {% if instance.installation %}
+                                    <div class="mt-2 instance-installation">
+                                        {{ instance.installation|replace('\r\n', '<br>')|replace('\n', '<br>')|safe }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+
+                                <!-- Commercial View: displays short name & short description (with fallback) -->
+                                <div class="instance-header commercial-view-header mb-3">
+                                    <div class="d-flex align-items-baseline">
+                                        <span class="instance-number">{{ number }}.{{ loop.index }}.</span>
+                                        <h4 class="instance-name mb-0 mr-2">
+                                            {% if instance.short_name %}
+                                                {{ instance.short_name }}
+                                            {% else %}
+                                                {{ instance.name }}
+                                            {% endif %}
+                                        </h4>
+                                    </div>
+                                    <div class="mt-2 instance-short-description">
+                                        {% if instance.short_description %}
+                                            {{ instance.short_description }}
+                                        {% else %}
+                                            {{ instance.description }}
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                {% if instance.type == 'Item' and instance.attributes %}
+                                  {{ tables.render_attributes_table(
+                                    [{'attributes': instance.attributes, 'application_name': 'Attributes'}], 
+                                    none, 
+                                    instance.type
+                                  ) }}
+                                {% elif instance.attribute_groups %}
+                                  {{ tables.render_attributes_table(instance.attribute_groups, none, instance.type) }}
+                                {% endif %}
+
+                                {% if instance.type == 'Item' and instance.linked_accessories %}
+                                  <div class="linked-accessory-section mt-4">
+                                    {% for accessory in instance.linked_accessories %}
+                                      <div class="linked-accessory mb-4">
+                                        <div class="d-flex align-items-baseline mb-2">
+                                          <span class="accessory-name font-weight-bold mr-2">{{ accessory.category_name }}: {{ accessory.name }}</span>
+                                        </div>
+                                        {{ tables.render_attributes_table(accessory.attribute_groups, none, 'Accessory', is_linked=True) }}
+                                      </div>
+                                    {% endfor %}
+                                  </div>
+                                {% endif %}
+
+                                <div class="execution-only">
+                                    {% if instance.materials %}
+                                    <div class="materials-section mt-2">
+                                        <h5>Materials</h5>
+                                        <ul>
+                                            {% for material in instance.materials %}
+                                                <li>{{ material.material_name }} (SKU: {{ material.SKU }})</li>
+                                            {% endfor %}
+                                        </ul>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                {% for subcategory in category.subcategories %}
+                    {% set sub_number = number ~ '.' ~ loop.index %}
+                    {{ render_category(subcategory, sub_number) }}
+                {% endfor %}
+            </div>
+        {% endmacro %}
+
+        {% for category in categories %}
+            {{ render_category(category, loop.index|string) }}
+        {% endfor %}
+    </div>
+</body>
+</html>

@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
+    <h2 class="text-2xl font-semibold mb-6 text-gray-800">Historial de cambios para el Proyecto <span
+            class="font-bold text-blue-600">"{{ project_name }}"</span></h2>
+
+    {% if logs %}
+
+    <div class="bg-white shadow rounded-lg" style="max-height: 600px; overflow-y: auto; overflow-x: auto;">
+        <table id="resizableTable" class="table-auto w-full border-collapse">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-4 py-2 text-left text-sm font-medium text-gray-500 uppercase tracking-wider"
+                        style="width: 150px;">Fecha</th>
+                    <th class="px-4 py-2 text-left text-sm font-medium text-gray-500 uppercase tracking-wider"
+                        style="width: 100px;">Acción</th>
+
+                    <th class="px-4 py-2 text-left text-sm font-medium text-gray-500 uppercase tracking-wider"
+                        style="width: 150px;">Usuario</th>
+                    <th class="px-4 py-2 text-left text-sm font-medium text-gray-500 uppercase tracking-wider"
+                        style="width: 150px;">Instancia</th>
+                    <th class="px-4 py-2 text-left text-sm font-medium text-gray-500 uppercase tracking-wider"
+                        style="width: 150px;">Tipo</th>
+                    <th class="px-4 py-2 text-left text-sm font-medium text-gray-500 uppercase tracking-wider"
+                        style="width: 15px;">Campo</th>
+                    <th class="px-4 py-2 text-left text-sm font-medium text-gray-500 uppercase tracking-wider"
+                        style="width: 150px;">Antes</th>
+                    <th class="px-4 py-2 text-left text-sm font-medium text-gray-500 uppercase tracking-wider"
+                        style="width: 150px;">Después</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                {% for log in logs %}
+                <tr class="hover:bg-gray-50">
+                    <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-700" style="width: 150px;"
+                        style="width: 150px;">{{ log.timestamp }}</td>
+                    <td class="px-4 py-2 whitespace-nowrap text-sm text-indigo-600 font-medium uppercase"
+                        style="width: 100px;">{{ log.action_type }}</td>
+
+                    <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-700" style="width: 150px;">{{ log.username
+                        }}</td>
+                    <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-700" style="width: 150px;">{{
+                        log.instance_name }}</td>
+                    <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-700 capitalize" style="width: 150px;">{{
+                        log.instance_type }}</td>
+                    <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-700" style="width: 150px;">{{
+                        log.field_changed }}</td>
+                    <td class="px-4 py-2 whitespace-nowrap text-sm text-red-600" style="width: 150px;">{{ log.old_value
+                        }}</td>
+                    <td class="px-4 py-2 whitespace-nowrap text-sm text-green-600" style="width: 150px;">{{
+                        log.new_value }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p class="text-gray-600 mt-4">No hay cambios registrados para este proyecto.</p>
+    {% endif %}
+</div>
+{% endblock %}

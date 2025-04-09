@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Database Management System</title>
+    <style>
+        .container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            height: 100vh;
+            gap: 20px;
+        }
+        .card {
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            text-decoration: none;
+            color: black;
+            transition: transform 0.2s;
+            width: 250px;
+        }
+        .card:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .logout {
+            margin-top: 30px;
+            text-decoration: none;
+            color: #555;
+        }
+        .logout:hover {
+            color: #000;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Bienvenido, {{ user['username'] }}!</h2>
+
+
+            <a href="/database_editor" class="card">
+                <h2>Database Editor</h2>
+                <p>Manage categories, items, and accessories</p>
+            </a>
+            <a href="/projects" class="card">
+                <h2>Projects Editor</h2>
+                <p>Create and manage projects</p>
+            </a>
+
+
+        <a href="{{ url_for('logout') }}" class="logout">Cerrar sesión</a>
+    </div>
+</body>
+</html>

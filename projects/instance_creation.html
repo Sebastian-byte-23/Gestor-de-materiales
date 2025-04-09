@@ -1,0 +1,66 @@
+<!-- Modal for creating instances -->
+<div class="modal fade" id="instanceCreationModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalTitle">Create Instance</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div id="existingInstanceAlert" class="alert alert-info d-none">
+                    This accessory already exists in the project. You can add additional attributes to it.
+                </div>
+                <form id="instanceForm">
+                    <input type="hidden" id="itemId" name="itemId">
+                    <input type="hidden" id="itemType" name="itemType">
+                    <input type="hidden" id="instanceId" name="instanceId">
+                    <input type="hidden" id="projectId" name="projectId">
+                    <input type="hidden" id="editMode" name="editMode" value="false">
+                    <!-- This form submits to endpoints in instances_management.py -->
+                    
+                    <div class="form-group instance-detail">
+                        <label for="instanceName">Name:</label>
+                        <input type="text" class="form-control" id="instanceName" name="name" required>
+                    </div>
+                    
+                    <div class="form-group instance-detail">
+                        <label for="instanceShortName">Short Name:</label>
+                        <input type="text" class="form-control" id="instanceShortName" name="shortName">
+                    </div>
+                    
+                    <div class="form-group instance-detail">
+                        <label for="instanceDescription">Description:</label>
+                        <textarea class="form-control" id="instanceDescription" name="description" rows="3"></textarea>
+                    </div>
+                    
+                    <div class="form-group instance-detail">
+                        <label for="instanceShortDescription">Short Description:</label>
+                        <textarea class="form-control" id="instanceShortDescription" name="shortDescription" rows="2"></textarea>
+                    </div>
+                    
+                    <div class="form-group instance-detail">
+                        <label for="instanceInstallation">Installation:</label>
+                        <textarea class="form-control" id="instanceInstallation" name="installation" rows="3"></textarea>
+                    </div>
+                    
+                    <div id="applicationContainer" class="form-group d-none">
+                        <label for="instanceApplication">Application:</label>
+                        <input type="text" class="form-control" id="instanceApplication" name="application">
+                        <input type="hidden" id="linkedItemId" name="linkedItemId">
+                        <small class="form-text text-muted">This identifies which item this accessory is linked to</small>
+                    </div>
+                    
+                    <div id="attributesContainer">
+                        <!-- Attributes will be dynamically added here -->
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="saveInstance">Create Instance</button>
+            </div>
+        </div>
+    </div>
+</div>

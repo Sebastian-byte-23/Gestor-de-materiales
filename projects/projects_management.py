@@ -466,7 +466,7 @@ def generate_project_pdf_route(project_id, report_type):
     output_path = os.path.join(output_dir, output_filename)
 
     # Print database paths for debugging
-    import os
+    # import os # Removed redundant import
 
     projects_db_path = os.path.join(
         os.path.dirname(os.path.dirname(__file__)), "projects.db"

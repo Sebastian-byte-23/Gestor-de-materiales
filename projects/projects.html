@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Projects Editor</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Projects Editor</h1>
+        <form method="post" action="{{ url_for('projects.projects') }}">
+            <div class="form-group">
+                <label for="name">Project Name:</label>
+                <input type="text" name="name" id="name" class="form-control">
+            </div>
+            <button type="submit" class="btn btn-primary">Create Project</button>
+        </form>
+
+        <h2>Projects</h2>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Created Date</th>
+                    <th>Modified Date</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for project in projects %}
+                <tr>
+                    <td>{{ project.project_id }}</td>
+                    <td><a href="{{ url_for('projects.project_categories', project_id=project.project_id) }}">{{ project.name }}</a></td>
+                    <td>{{ project.created_date }}</td>
+                    <td>{{ project.modified_date }}</td>
+                    <td>
+                        <a href="{{ url_for('projects.edit_project', project_id=project.project_id) }}" class="btn btn-sm btn-warning">Edit</a>
+                        <a href="{{ url_for('projects.project_overview', project_id=project.project_id) }}" class="btn btn-sm btn-info">Overview</a>
+                        <form action="{{ url_for('projects.delete_project', project_id=project.project_id) }}" method="post" style="display:inline;">
+                            <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?')">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <a href="/" class="btn btn-secondary">Back to Home</a>
+    </div>
+</body>
+</html>
